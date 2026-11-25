@@ -1,8 +1,8 @@
 // Obsidia service worker: simpan tampilan aplikasi agar cepat dibuka dan bisa dibuka offline,
 // serta menampilkan notifikasi saat jawaban dari server latar belakang sudah siap.
 // Permintaan ke penyedia AI dan server tidak pernah disimpan.
-const CACHE = 'obsidia-v3';
-const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const CACHE = 'obsidia-v4';
+const FILES = ['./', './index.html', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './apple-touch-icon.png', './studio.js', './pptxgen.bundle.js'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
 });

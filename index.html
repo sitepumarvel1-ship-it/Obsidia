@@ -290,6 +290,8 @@ textarea.in{min-height:96px;resize:vertical}
 .pe b{display:block}
 .pe span{font-size:13.5px;color:var(--mute)}
 .mrow{display:flex;gap:8px;align-items:center}
+#studio{flex:1;min-height:0;overflow:hidden}
+.main.studon .body{display:none}
 .mrow select{flex:1}
 </style>
 </head>
@@ -319,6 +321,8 @@ textarea.in{min-height:96px;resize:vertical}
 <button class="newb" id="new" type="button"><span data-i="pen"></span>Chat baru</button>
 <div class="srch"><span data-i="search"></span><input id="q" type="search" placeholder="Cari chat" aria-label="Cari chat" autocomplete="off"></div>
 <button class="item" id="allBtn" type="button"><span data-i="list"></span><span class="t">Semua chat</span></button>
+<button class="item" id="slideBtn" type="button"><span data-i="slides"></span><span class="t">Studio Slide</span></button>
+<button class="item" id="videoBtn" type="button"><span data-i="film"></span><span class="t">Studio Video</span></button>
 <nav id="nav" aria-label="Proyek dan riwayat chat"></nav>
 <button class="me" id="meBtn" type="button"><span class="avt" id="avt">O</span><span><b id="meName">Pengguna</b><span id="sync">Tersimpan di perangkat ini</span></span></button>
 </aside>
@@ -331,6 +335,7 @@ textarea.in{min-height:96px;resize:vertical}
 <button class="ib" id="exp" type="button" aria-label="Unduh chat" hidden><span data-i="down"></span></button>
 <button class="ib" id="new2" type="button" aria-label="Chat baru"><span data-i="pen"></span></button>
 </header>
+<div id="studio" hidden></div>
 <div class="body" id="body">
 <div id="scroll"><div class="wrap">
 <div id="empty">
@@ -372,6 +377,8 @@ textarea.in{min-height:96px;resize:vertical}
 <button class="chip" type="button" data-p="Bantu saya menulis "><span data-i="pen"></span>Tulis</button>
 <button class="chip" type="button" data-p="Buatkan halaman web interaktif tentang "><span data-i="code"></span>Buat aplikasi</button>
 <button class="chip" type="button" data-p="Rangkum teks berikut menjadi poin-poin:&#10;"><span data-i="list"></span>Rangkum</button>
+<button class="chip" type="button" data-go="slides"><span data-i="slides"></span>Buat slide</button>
+<button class="chip" type="button" data-go="video"><span data-i="film"></span>Buat video</button>
 </div>
 <div class="plist" id="plist"><h3>Chat di proyek ini</h3><div id="pchats"></div></div>
 <p class="disc">Obsidia bisa keliru. Periksa kembali info yang penting.</p>
@@ -429,7 +436,8 @@ textarea.in{min-height:96px;resize:vertical}
 </section>
 <section data-sec="about" class="about" hidden>
 <p><b>Obsidia</b> adalah aplikasi chat AI pribadi yang memakai API gratis dari berbagai penyedia. Kamu memilih penyedia dan modelnya sendiri.</p>
-<p>Fitur: banyak penyedia dan model, mode latar belakang dengan notifikasi lewat server Cloudflare gratis milikmu, pindah otomatis saat penyedia penuh, proses berpikir, lampiran gambar dan teks, dikte dan baca suara, proyek, memori, preferensi dan gaya, pratinjau artifact HTML/SVG, edit pesan, bintang, ekspor, serta cadangan dan pemulihan.</p>
+<p>Studio Slide membuat presentasi dengan AI, 10 template, pengatur warna dan font, animasi, lalu mengekspor ke PowerPoint atau HTML. Studio Video membuat video pendek dengan 8 template, animasi teks, transisi, musik, dan narasi, lalu mengekspor ke MP4 atau WebM.</p>
+<p>Fitur lain: banyak penyedia dan model, mode latar belakang dengan notifikasi lewat server Cloudflare gratis milikmu, pindah otomatis saat penyedia penuh, proses berpikir, lampiran gambar dan teks, dikte dan baca suara, proyek, memori, preferensi dan gaya, pratinjau artifact HTML/SVG, edit pesan, bintang, ekspor, serta cadangan dan pemulihan.</p>
 <p>Batasan: kuota gratis tiap penyedia terbatas dan bisa berubah. Kemampuan membaca gambar tergantung model. Data di paket gratis beberapa penyedia (misalnya Google) bisa dipakai untuk melatih AI mereka, jadi hindari mengirim data sensitif.</p>
 </section>
 </div>
@@ -450,7 +458,7 @@ const $=s=>document.querySelector(s);
 const $$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid6=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
-const I={menu:'M4 7h16M4 12h16M4 17h16',pen:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z',search:'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14ZM20 20l-4-4',copy:'M9 9h11v11H9zM5 15H4V4h11v1',redo:'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7',up:'M12 19V5M6 11l6-6 6 6',stop:'M7 7h10v10H7z',chev:'M6 9l6 6 6-6',trash:'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',check:'M5 12l5 5 9-10',book:'M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z',code:'M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14',list:'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01',plus:'M12 5v14M5 12h14',mic:'M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3ZM5 11a7 7 0 0 0 14 0M12 18v3',speak:'M4 9v6h4l5 4V5L8 9H4ZM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12',star:'M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6L12 16.8 6.6 19.7l1.1-6L3.2 9.4l6.1-.8Z',down:'M12 4v11M7 10l5 5 5-5M5 20h14',x:'M6 6l12 12M18 6 6 18',folder:'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z',file:'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8ZM14 3v5h5',img:'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15.5 8.5h.01',sliders:'M4 7h10M18 7h2M4 17h4M12 17h8M14 5v4M8 15v4',spark:'M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6',key:'M14.5 4a5.5 5.5 0 1 1-5 7.9L3 18.5V21h3v-2h2v-2h2l1.6-1.6A5.5 5.5 0 0 1 14.5 4ZM16 8h.01'};
+const I={menu:'M4 7h16M4 12h16M4 17h16',pen:'M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z',search:'M11 4a7 7 0 1 0 0 14a7 7 0 1 0 0-14ZM20 20l-4-4',copy:'M9 9h11v11H9zM5 15H4V4h11v1',redo:'M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7',up:'M12 19V5M6 11l6-6 6 6',stop:'M7 7h10v10H7z',chev:'M6 9l6 6 6-6',trash:'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',check:'M5 12l5 5 9-10',book:'M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4zM20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z',code:'M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14',list:'M9 6h11M9 12h11M9 18h11M4.5 6h.01M4.5 12h.01M4.5 18h.01',plus:'M12 5v14M5 12h14',mic:'M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3ZM5 11a7 7 0 0 0 14 0M12 18v3',speak:'M4 9v6h4l5 4V5L8 9H4ZM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12',star:'M12 3l2.7 5.6 6.1.8-4.5 4.3 1.1 6L12 16.8 6.6 19.7l1.1-6L3.2 9.4l6.1-.8Z',down:'M12 4v11M7 10l5 5 5-5M5 20h14',x:'M6 6l12 12M18 6 6 18',folder:'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z',file:'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8ZM14 3v5h5',img:'M4 5h16v14H4zM4 16l5-5 4 4 3-3 4 4M15.5 8.5h.01',sliders:'M4 7h10M18 7h2M4 17h4M12 17h8M14 5v4M8 15v4',spark:'M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6',key:'M14.5 4a5.5 5.5 0 1 1-5 7.9L3 18.5V21h3v-2h2v-2h2l1.6-1.6A5.5 5.5 0 0 1 14.5 4ZM16 8h.01',play:'M7 4.5v15l13-7.5Z',pause:'M6 4h4.5v16H6zM13.5 4H18v16h-4.5z',dn:'M12 5v14M6 13l6 6 6-6',music:'M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z',slides:'M3 4h18v12H3zM8 21h8M12 16v5M7 8h6M7 11h10',film:'M3 5h18v14H3zM7 5v14M17 5v14M3 9h4M3 15h4M17 9h4M17 15h4'};
 const ico=(n,f)=>`<svg class="i${f?' f':''}" viewBox="0 0 24 24" aria-hidden="true"><path d="${I[n]}"/></svg>`;
 $$('[data-i]').forEach(e=>{e.outerHTML=ico(e.dataset.i)});
 
@@ -534,7 +542,7 @@ function splitThink(raw){const s=raw.replace(/^\s+/,'');if(!s.startsWith('<think
 function greet(){const h=new Date().getHours(),g=h<11?'Selamat pagi':h<15?'Selamat siang':h<18?'Selamat sore':'Selamat malam';$('#greet').textContent=st.set.name?g+', '+st.set.name:g}
 function itemHTML(c){const p=proj(c.proj);return `<div class="item${c.id===st.cur?' on':''}" role="button" tabindex="0" data-id="${esc(c.id)}"><span class="t">${esc(c.title)}</span>${c.ex?'<span class="tag">contoh</span>':p?`<span class="tag">${esc(p.name)}</span>`:''}<button class="del" type="button" data-del="${esc(c.id)}" aria-label="Hapus chat">${ico('trash')}</button></div>`}
 function renderNav(){
-$('#allBtn').classList.toggle('on',st.view==='all'&&!st.cur);
+$('#allBtn').classList.toggle('on',st.view==='all'&&!st.cur);$('#slideBtn').classList.toggle('on',st.view==='slides'&&!st.cur);$('#videoBtn').classList.toggle('on',st.view==='video'&&!st.cur);
 const q=$('#q').value.trim().toLowerCase();
 const cs=st.convs.filter(c=>!q||c.title.toLowerCase().includes(q)||c.msgs.some(m=>(m.content||'').toLowerCase().includes(q))).sort((a,b)=>b.t-a.t);
 const pins=cs.filter(c=>c.pin),rest=cs.filter(c=>!c.pin);
@@ -565,13 +573,14 @@ $('#aCount').textContent=selMode?sel.size+' dipilih':cs.length+' chat';$('#aSel'
 $('#alist').innerHTML=cs.length?cs.map(c=>{const p=proj(c.proj);return `<div class="arow" role="button" tabindex="0" data-open="${esc(c.id)}">${selMode?`<input type="checkbox" tabindex="-1" ${sel.has(c.id)?'checked':''} aria-label="Pilih chat">`:''}<div><b>${esc(c.title)}</b><span>Pesan terakhir ${esc(rel(c.t))}</span>${p?`<span class="tag">${esc(p.name)}</span>`:''}${c.model?`<span class="tag">${esc(shortModel(c.model))}</span>`:''}${c.ex?'<span class="tag">contoh</span>':''}</div></div>`}).join(''):`<p class="none">${q?'Tidak ada chat yang cocok.':'Belum ada chat.'}</p>`;
 }
 function renderChat(){
-const c=cur(),has=!!(c&&c.msgs.length),p=!has&&st.view&&st.view!=='all'?proj(st.view):null,av=!has&&st.view==='all';
+const c=cur(),has=!!(c&&c.msgs.length),sv=!has&&(st.view==='slides'||st.view==='video')?st.view:null,p=!has&&st.view&&!['all','slides','video'].includes(st.view)?proj(st.view):null,av=!has&&st.view==='all';
 const mn=$('#main');mn.classList.toggle('fresh',!has);mn.classList.toggle('proj',!!p);mn.classList.toggle('allon',av);$('#allv').hidden=!av;if(av)renderAllv();
-$('#titleT').textContent=has?c.title:p?p.name:av?'Riwayat chat':'Chat baru';
+mn.classList.toggle('studon',!!sv);$('#studio').hidden=!sv;if(sv!==studioOpen){if(studioOpen&&window.Studio)window.Studio.close();studioOpen=sv;if(sv)openStudio(sv);else $('#studio').innerHTML=''}
+$('#titleT').textContent=has?c.title:p?p.name:av?'Riwayat chat':sv==='slides'?'Studio Slide':sv==='video'?'Studio Video':'Chat baru';
 $('#star').hidden=$('#exp').hidden=!has;
 if(has)$('#star').classList.toggle('on',!!c.pin);
 $('#hero').hidden=!!p||av;$('#phead').hidden=!p;
-$('#setup').hidden=has||av||PROVIDERS.some(isReady);
+$('#setup').hidden=has||av||!!sv||PROVIDERS.some(isReady);
 if(p){$('#pName').textContent=p.name;$('#pDesc').textContent=p.instr?p.instr.slice(0,160)+(p.instr.length>160?'…':''):'Tambahkan instruksi dan pengetahuan agar setiap chat di proyek ini paham konteksnya.';
 const pc=st.convs.filter(x=>x.proj===p.id).sort((a,b)=>b.t-a.t);
 $('#pchats').innerHTML=pc.length?pc.map(x=>`<button class="pc" type="button" data-open="${esc(x.id)}"><b>${esc(x.title)}</b><span>${x.msgs.length} pesan, ${esc(rel(x.t))}</span></button>`).join(''):'<p class="none" style="padding:0">Belum ada chat. Mulai dengan menulis pesan di atas.</p>'}
@@ -977,7 +986,24 @@ if(projEdit){projEdit.name=n;projEdit.instr=$('#pI').value.trim();projEdit.know=
 else{const p={id:'p'+uid6(),name:n,instr:$('#pI').value.trim(),know:$('#pK').value};st.projs.push(p);st.cur=null;st.view=p.id}
 save();closeMods();renderNav();toast('Proyek disimpan.')});
 $('#pDel').addEventListener('click',()=>{if(!projEdit)return;const id=projEdit.id;st.projs=st.projs.filter(p=>p.id!==id);st.convs.forEach(c=>{if(c.proj===id)c.proj=null});if(st.view===id)st.view=null;save();closeMods();renderNav();toast('Proyek dihapus. Chat-nya tetap ada.')});
-$('#chips').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;const t=$('#ta');t.value=b.dataset.p;sizeTa();t.focus();t.setSelectionRange(t.value.length,t.value.length)});
+$('#chips').addEventListener('click',e=>{const g=e.target.closest('[data-go]');if(g){goStudio(g.dataset.go);return}const b=e.target.closest('[data-p]');if(!b)return;const t=$('#ta');t.value=b.dataset.p;sizeTa();t.focus();t.setSelectionRange(t.value.length,t.value.length)});
+
+/* ---------- studio ---------- */
+let studioOpen=null,studioLib=null;
+function loadStudio(){return studioLib||(studioLib=new Promise((res,rej)=>{const s=document.createElement('script');s.src='studio.js';s.onload=()=>res(window.Studio);s.onerror=()=>{studioLib=null;rej(new Error('Studio gagal dimuat. Periksa internet lalu coba lagi.'))};document.head.appendChild(s)}))}
+async function openStudio(kind){const el=$('#studio');el.innerHTML='<p class="none" style="padding:24px">Memuat studio…</p>';try{const S=await loadStudio();if(studioOpen===kind)await S.open(kind,el)}catch(e){el.innerHTML='';toast(e.message)}}
+function goStudio(kind){if(ctrl)return;st.cur=null;st.view=kind;editing=-1;save();renderNav();renderChat();closeSide()}
+function parseJSON(t){let s=String(t||'').trim().replace(/^```(?:json)?\s*/i,'').replace(/```\s*$/,'');const a=s.indexOf('{'),b=s.lastIndexOf('}');if(a<0||b<a)throw mkErr('AI tidak mengirim data yang bisa dibaca. Coba lagi.',422);try{return JSON.parse(s.slice(a,b+1))}catch(e){throw mkErr('AI mengirim data yang terpotong atau rusak. Coba lagi atau pilih model lain.',422)}}
+async function askAI(system,user,o={}){
+const {p,model}=curSel();const queue=[];if(isReady(p))queue.push({p,model});PROVIDERS.filter(x=>x.id!==p.id&&isReady(x)&&x.id!=='ollama').forEach(x=>queue.push({p:x,model:modelsOf(x)[0]}));
+let last=null;
+for(const q of queue){if(!q.model)continue;let raw='';try{await callP(q.p,q.model,system,[{role:'user',text:user,images:[]}],'',o.signal,{text:d=>{raw+=d;o.onText&&o.onText(raw)},think:()=>{},note:()=>{}});const txt=splitThink(raw).text;return o.json?parseJSON(txt):txt}catch(e){if(e.name==='AbortError')throw e;last=Object.assign(e,{prov:q.p});if(e.status!==422&&!retryable(e))break}}
+throw last||mkErr('Belum ada penyedia AI yang siap. Buka Pengaturan > Penyedia AI.',401);
+}
+async function saveBlob(blob,name){const file=new File([blob],name,{type:blob.type});try{if(navigator.canShare&&matchMedia('(pointer:coarse)').matches&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Berkas diunduh: '+name)}
+window.OBS={esc,ico,toast,idbGet,idbSet,askAI,saveBlob,providersReady:()=>PROVIDERS.some(isReady),openSettings:()=>openSet('prov'),errText:e=>e.status===422?e.message:errMsg(e,e.prov||curSel().p)};
+$('#slideBtn').addEventListener('click',()=>goStudio('slides'));
+$('#videoBtn').addEventListener('click',()=>goStudio('video'));
 
 /* ---------- latar belakang ---------- */
 setInterval(()=>$$('.tt[data-t0]').forEach(e=>{const s=Math.round((Date.now()-+e.dataset.t0)/1000);e.textContent=e.dataset.l+'…'+(s>2?' '+s+' dtk':'')}),1000);

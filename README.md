@@ -10,7 +10,17 @@ Aplikasi chat AI pribadi yang memakai API gratis dari berbagai penyedia. Semua c
 | `manifest.webmanifest` | Agar bisa dipasang seperti aplikasi di HP |
 | `sw.js` | Membuat aplikasi cepat dibuka dan tetap terbuka saat offline |
 | `icon.svg`, `icon-192.png`, `icon-512.png`, `icon-maskable.png`, `apple-touch-icon.png` | Logo Obsidia |
+| `studio.js` | Studio Slide dan Studio Video |
+| `pptxgen.bundle.js` | Pustaka pembuat file PowerPoint (PptxGenJS, lisensi MIT) |
 | `relay/` | Server gratis untuk mode latar belakang (opsional, dipasang di Cloudflare) |
+
+## Studio Slide dan Studio Video
+
+Buka dari menu kiri. Keduanya memakai penyedia AI yang sudah kamu atur.
+
+- **Studio Slide:** tekan **Buat dengan AI**, tulis topiknya, lalu atur template, warna (bisa dibuat dari satu warna atau diacak), font, dan animasi. **Presentasikan** menampilkan slide layar penuh dengan animasi. **PowerPoint** mengekspor `.pptx` (dengan transisi dan animasi masuk sederhana), **HTML** mengekspor presentasi yang bisa dibuka di browser mana pun dengan animasi lengkap.
+- **Studio Video:** pilih template (promo, story, edukasi, kutipan, slideshow foto, acara, tutorial, fakta), tekan **Buat dengan AI**, lalu atur adegan, animasi teks, transisi, musik, dan narasi. **Ekspor video** merekam video secara langsung, jadi durasi ekspor sama dengan durasi video. Biarkan layar menyala dan jangan pindah aplikasi selama ekspor.
+- Di iPhone, file hasil ekspor muncul di menu Bagikan: pilih **Simpan Video** atau **Simpan ke File**.
 
 ## Cara pasang di GitHub Pages
 
