@@ -1,0 +1,19 @@
+{
+  "name": "obsidia-relay",
+  "private": true,
+  "description": "Server gratis agar Obsidia tetap mengerjakan jawaban saat aplikasi ditutup",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4"
+  },
+  "cloudflare": {
+    "bindings": {
+      "OBSIDIA_PASSWORD": {
+        "description": "Buat kata sandi panjang (minimal 16 karakter). Kata sandi ini kamu tempel di Obsidia > Pengaturan > Latar belakang."
+      }
+    }
+  }
+}

@@ -391,11 +391,20 @@ textarea.in{min-height:96px;resize:vertical}
 <div class="mod" id="setM" role="dialog" aria-modal="true" aria-labelledby="setH">
 <div class="box">
 <h2 id="setH">Pengaturan<button class="ib" type="button" data-close aria-label="Tutup"><span data-i="x"></span></button></h2>
-<div class="stabs" id="stabs"><button type="button" class="on" data-s="prov">Penyedia AI</button><button type="button" data-s="umum">Umum</button><button type="button" data-s="mem">Memori</button><button type="button" data-s="data">Data</button><button type="button" data-s="about">Tentang</button></div>
+<div class="stabs" id="stabs"><button type="button" class="on" data-s="prov">Penyedia AI</button><button type="button" data-s="bg">Latar belakang</button><button type="button" data-s="umum">Umum</button><button type="button" data-s="mem">Memori</button><button type="button" data-s="data">Data</button><button type="button" data-s="about">Tentang</button></div>
 <section data-sec="prov">
 <label class="chk"><input type="checkbox" id="sFall">Jika penyedia penuh atau error, otomatis coba penyedia lain</label>
 <p class="nt">API key disimpan hanya di browser ini dan dikirim langsung ke penyedianya. Jangan taruh API key di kode atau repo GitHub.</p>
 <div id="pvList"></div>
+</section>
+<section data-sec="bg" hidden>
+<p class="nt">Dengan server gratis milikmu di Cloudflare, jawaban tetap dikerjakan walau Obsidia ditutup, lalu kamu dapat notifikasi saat jawaban siap. Cara membuat server ada di README, bagian "Mode latar belakang".</p>
+<div class="fld"><label for="rUrl">Alamat server</label><input class="in" id="rUrl" type="url" placeholder="https://obsidia-relay.namamu.workers.dev" autocomplete="off" spellcheck="false"></div>
+<div class="fld"><label for="rPw">Kata sandi server</label><div class="kr"><input class="in" id="rPw" type="password" autocomplete="off" spellcheck="false" placeholder="Isi OBSIDIA_PASSWORD"><button class="btn" type="button" id="rShow">Lihat</button></div></div>
+<label class="chk"><input type="checkbox" id="rOn">Kerjakan jawaban di server (tetap jalan saat Obsidia ditutup)</label>
+<div class="btns" style="justify-content:flex-start"><button class="btn" id="rTest" type="button">Tes server</button><button class="btn" id="rPush" type="button">Aktifkan notifikasi</button><button class="btn" id="rPushTest" type="button">Kirim notifikasi uji</button></div>
+<p class="msgp" id="rMsg"></p>
+<p class="nt">Di iPhone, notifikasi hanya bisa diaktifkan dari Obsidia yang dibuka lewat ikon di Layar Utama (iOS 16.4 atau lebih baru). Ollama tetap dijawab langsung karena berjalan di komputermu.</p>
 </section>
 <section data-sec="umum" hidden>
 <div class="fld"><label for="sName">Nama panggilan</label><input class="in" id="sName" type="text" maxlength="40" placeholder="Bagaimana Obsidia memanggilmu?"></div>
@@ -420,7 +429,7 @@ textarea.in{min-height:96px;resize:vertical}
 </section>
 <section data-sec="about" class="about" hidden>
 <p><b>Obsidia</b> adalah aplikasi chat AI pribadi yang memakai API gratis dari berbagai penyedia. Kamu memilih penyedia dan modelnya sendiri.</p>
-<p>Fitur: banyak penyedia dan model, pindah otomatis saat penyedia penuh, proses berpikir, lampiran gambar dan teks, dikte dan baca suara, proyek, memori, preferensi dan gaya, pratinjau artifact HTML/SVG, edit pesan, bintang, ekspor, serta cadangan dan pemulihan.</p>
+<p>Fitur: banyak penyedia dan model, mode latar belakang dengan notifikasi lewat server Cloudflare gratis milikmu, pindah otomatis saat penyedia penuh, proses berpikir, lampiran gambar dan teks, dikte dan baca suara, proyek, memori, preferensi dan gaya, pratinjau artifact HTML/SVG, edit pesan, bintang, ekspor, serta cadangan dan pemulihan.</p>
 <p>Batasan: kuota gratis tiap penyedia terbatas dan bisa berubah. Kemampuan membaca gambar tergantung model. Data di paket gratis beberapa penyedia (misalnya Google) bisa dipakai untuk melatih AI mereka, jadi hindari mengirim data sensitif.</p>
 </section>
 </div>
@@ -463,7 +472,7 @@ const TXT=/\.(txt|md|markdown|csv|tsv|json|html?|css|js|mjs|ts|tsx|jsx|py|java|k
 const seed=()=>[
 {id:'ex2',ex:true,t:Date.now()-36e5,title:'Fungsi debounce di JavaScript',msgs:[{role:'user',content:'Apa itu debounce? Kasih contoh kodenya.'},{role:'assistant',content:'**Debounce** menunda pemanggilan fungsi sampai pengguna berhenti memicu event selama jeda tertentu. Cocok untuk kolom pencarian atau event resize.\n\n```js\nfunction debounce(fn, jeda = 300) {\n  let timer;\n  return (...args) => {\n    clearTimeout(timer);\n    timer = setTimeout(() => fn(...args), jeda);\n  };\n}\n```\n\nSetiap ketikan baru mereset `timer`, jadi `fn` hanya jalan sekali setelah pengguna diam 300 ms.',model:'contoh'}]},
 {id:'ex1',ex:true,t:Date.now()-864e5,title:'Kartu ucapan ulang tahun',msgs:[{role:'user',content:'Buatkan kartu ucapan ulang tahun sederhana dalam HTML.'},{role:'assistant',content:'Ini kartunya. Tekan **Pratinjau** untuk melihatnya.\n\n```html\n<!DOCTYPE html>\n<html><head><meta charset="utf-8"><style>\nbody{margin:0;min-height:100vh;display:grid;place-items:center;background:#1b1d22;font-family:system-ui}\n.k{background:#fff;padding:40px 48px;border-radius:20px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4)}\nh1{margin:0 0 8px;color:#d93427}\nbutton{margin-top:16px;padding:10px 18px;border:0;border-radius:10px;background:#17181c;color:#fff;font-size:16px}\n</style></head><body>\n<div class="k"><h1>Selamat Ulang Tahun!</h1><p>Semoga tahun ini penuh kejutan baik.</p><button onclick="this.textContent=\'Hore!\'">Rayakan</button></div>\n</body></html>\n```',model:'contoh'}]}];
-let st={convs:[],projs:[],mem:[],prov:{},set:{name:'',instr:'',style:'normal',pv:'gemini',model:'gemini-flash-latest',effort:'',voice:'',fallback:true,ctx:12000,theme:'',useMem:true},cur:null,view:null};
+let st={convs:[],projs:[],mem:[],prov:{},set:{name:'',instr:'',style:'normal',pv:'gemini',model:'gemini-flash-latest',effort:'',voice:'',fallback:true,ctx:12000,theme:'',useMem:true},cur:null,view:null,relay:{url:'',pw:'',on:false,push:false}};
 let ctrl=null,raf=0,tick=0,t0=0,editing=-1,pend=[],rec=null,listening=false,dBase='',speakIdx=-1,art=null,projEdit=null,showMore='',selMode=false,sel=new Set(),delConfirm=false;
 const P=id=>PROVIDERS.find(p=>p.id===id)||null;
 const pcfg=id=>st.prov[id]||(st.prov[id]={key:'',base:'',models:[],on:false});
@@ -474,6 +483,11 @@ const shortModel=m=>String(m||'').split('/').pop().replace(/:free$/,' (gratis)')
 const cur=()=>st.convs.find(c=>c.id===st.cur)||null;
 const proj=id=>st.projs.find(p=>p.id===id)||null;
 const curSel=()=>{const c=cur();const p=P((c&&c.pv)||st.set.pv)||PROVIDERS[0];return {p,model:(c&&c.model)||st.set.model||modelsOf(p)[0]}};
+const relayOn=()=>!!(st.relay&&st.relay.on&&/^https:\/\//.test(st.relay.url||'')&&st.relay.pw);
+const busyNow=()=>!!ctrl||!!(cur()&&cur().msgs.some(x=>x.job));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const b64d=s=>{s=String(s).replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';return Uint8Array.from(atob(s),c=>c.charCodeAt(0))};
+async function relay(method,path,body){const r=await fetch(st.relay.url.replace(/\/+$/,'')+path,{method,headers:{'Authorization':'Bearer '+st.relay.pw,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});let j={};try{j=await r.json()}catch(e){}if(!r.ok)throw mkErr(j.error||('HTTP '+r.status),r.status);return j}
 let tt=0;const toast=m=>{const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2600)};
 
 /* ---------- penyimpanan ---------- */
@@ -482,7 +496,10 @@ const openDB=()=>new Promise(res=>{try{const r=indexedDB.open('obsidia',1);r.onu
 const idbGet=k=>new Promise(res=>{if(!idb)return res(null);try{const q=idb.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>res(q.result??null);q.onerror=()=>res(null)}catch(e){res(null)}});
 const idbSet=(k,v)=>new Promise(res=>{if(!idb)return res(false);try{const tx=idb.transaction('kv','readwrite');tx.objectStore('kv').put(v,k);tx.oncomplete=()=>res(true);tx.onerror=()=>res(false);tx.onabort=()=>res(false)}catch(e){res(false)}});
 const snap=()=>JSON.parse(JSON.stringify(st,(k,v)=>k==='pending'?undefined:v));
-function save(){clearTimeout(sv);sv=setTimeout(async()=>{const d=snap();if(!(await idbSet('state',d))){try{localStorage.setItem('obsidia',JSON.stringify(d))}catch(e){toast('Penyimpanan penuh. Hapus chat lama atau unduh cadangan.')}}},250)}
+async function saveNow(){clearTimeout(sv);const d=snap();if(!(await idbSet('state',d))){try{localStorage.setItem('obsidia',JSON.stringify(d))}catch(e){toast('Penyimpanan penuh. Hapus chat lama atau unduh cadangan.')}}}
+function save(){clearTimeout(sv);sv=setTimeout(saveNow,250)}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')saveNow()});
+addEventListener('pagehide',()=>{saveNow()});
 
 /* ---------- markdown ---------- */
 const inl=s=>esc(s).replace(/`([^`]+)`/g,'<code>$1</code>').replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>').replace(/(^|[^*\w])\*([^*\s][^*]*)\*/g,'$1<em>$2</em>').replace(/\[([^\]]+)\]\((https:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
@@ -535,7 +552,7 @@ if(m.role==='user'){
 if(i===editing)return `<div class="msg u"><div class="edit"><textarea id="editTa" aria-label="Edit pesan">${esc(m.content)}</textarea><div><button class="btn" type="button" data-act="ecancel">Batal</button><button class="btn pri" type="button" data-act="esave">Kirim</button></div></div></div>`;
 return `<div class="msg u">${uattHTML(m)}${m.content?`<div class="bub">${esc(m.content)}</div>`:''}<div class="acts"><button type="button" data-act="edit" data-n="${i}">${ico('pen')}Edit</button><button type="button" data-act="copy" data-n="${i}">${ico('copy')}Salin</button></div></div>`;
 }
-const body=m.pending&&!m.content?(m.think?'':`<span class="think"><span class="dots"><i></i><i></i><i></i></span><span class="tt">Berpikir…</span></span>`):md(m.content);
+const body=m.pending&&!m.content?(m.think?'':`<span class="think"><span class="dots"><i></i><i></i><i></i></span><span class="tt" data-t0="${m.t0||Date.now()}" data-l="${m.job?'Dikerjakan di server':'Berpikir'}">${m.job?'Dikerjakan di server…':'Berpikir…'}</span></span>${m.job?`<p class="nt">${st.relay.push?'Boleh tutup Obsidia. Kamu akan dapat notifikasi saat jawaban siap.':'Boleh tutup Obsidia. Buka lagi nanti untuk melihat jawabannya.'}</p>`:''}`):md(m.content);
 const tts='speechSynthesis' in window;
 const acts=m.pending?'':`<div class="acts">${m.content?`<button type="button" data-act="copy" data-n="${i}">${ico('copy')}Salin</button>${tts?`<button type="button" data-act="say" data-n="${i}">${ico(speakIdx===i?'stop':'speak',speakIdx===i)}${speakIdx===i?'Berhenti':'Dengarkan'}</button>`:''}`:''}${last?`<button type="button" data-act="regen">${ico('redo')}Ulangi</button>`:''}${m.model?`<small>${esc(m.model)}</small>`:''}</div>`;
 return `<div class="msg ai"><svg class="av" aria-hidden="true"><use href="#logo"/></svg><div class="col">${thinkHTML(m)}<div class="bd">${body}</div>${m.err?`<p class="err">${esc(m.err)}</p>`:''}${m.note?`<p class="nt">${esc(m.note)}</p>`:''}${acts}</div></div>`;
@@ -562,6 +579,7 @@ $('#ta').placeholder=p?'Mulai chat di proyek '+p.name:has?'Balas Obsidia':'Tanya
 $('#msgs').innerHTML=has?c.msgs.map((m,i)=>msgHTML(m,i,i===c.msgs.length-1)).join(''):'';
 if(editing>-1){const e=$('#editTa');if(e){e.focus();e.setSelectionRange(e.value.length,e.value.length)}}
 renderModel();
+setBusy(busyNow());
 }
 function renderModel(){
 const {p,model}=curSel(),rs=PROVIDERS.filter(isReady);
@@ -582,10 +600,10 @@ const a=$('#atts');a.hidden=!pend.length;
 a.innerHTML=pend.map((x,i)=>`<div class="att">${x.kind==='image'?`<img src="${esc(x.data)}" alt="">`:`<span class="fi">${ico('file')}</span>`}<span>${esc(x.name)}</span><button type="button" data-rm="${i}" aria-label="Hapus lampiran">${ico('x')}</button></div>`).join('');
 sizeTa();
 }
-function applySettings(){greet();const n=st.set.name;$('#meName').textContent=n||'Pengguna';$('#avt').textContent=(n||'O').trim().charAt(0).toUpperCase();if(st.set.theme)document.documentElement.dataset.theme=st.set.theme;else delete document.documentElement.dataset.theme;const r=PROVIDERS.filter(isReady).length;$('#sync').textContent=r?r+' penyedia AI siap':'Belum ada penyedia AI'}
+function applySettings(){greet();const n=st.set.name;$('#meName').textContent=n||'Pengguna';$('#avt').textContent=(n||'O').trim().charAt(0).toUpperCase();if(st.set.theme)document.documentElement.dataset.theme=st.set.theme;else delete document.documentElement.dataset.theme;const r=PROVIDERS.filter(isReady).length;$('#sync').textContent=(r?r+' penyedia AI siap':'Belum ada penyedia AI')+(relayOn()?', latar belakang aktif':'')}
 function renderAll(){renderNav();renderChat();applySettings()}
 const toBottom=()=>{const s=$('#scroll');s.scrollTop=s.scrollHeight};
-function sizeTa(){const t=$('#ta');t.style.height='auto';t.style.height=Math.min(t.scrollHeight,220)+'px';$('#send').disabled=!ctrl&&!t.value.trim()&&!pend.length}
+function sizeTa(){const t=$('#ta');t.style.height='auto';t.style.height=Math.min(t.scrollHeight,220)+'px';$('#send').disabled=!busyNow()&&!t.value.trim()&&!pend.length}
 function setBusy(b){const s=$('#send');s.innerHTML=b?ico('stop',1):ico('up');s.setAttribute('aria-label',b?'Hentikan':'Kirim');s.disabled=!b&&!$('#ta').value.trim()&&!pend.length}
 function paint(m){
 if(raf)return;
@@ -665,19 +683,21 @@ const retryable=e=>!e.status||e.status===429||e.status>=500;
 /* ---------- menjalankan ---------- */
 async function run(c){
 const {p,model}=curSel();
-const m={role:'assistant',content:'',think:'',pending:true};
-c.msgs.push(m);c.t=Date.now();renderNav();renderChat();toBottom();
+const m={role:'assistant',content:'',think:'',pending:true,live:true};
+c.msgs.push(m);c.t=Date.now();save();renderNav();renderChat();toBottom();let ls=Date.now();const keep=()=>{if(Date.now()-ls>1500){ls=Date.now();save()}};
 const queue=[];if(isReady(p))queue.push({p,model});
 if(st.set.fallback||!queue.length)PROVIDERS.filter(x=>x.id!==p.id&&isReady(x)).forEach(x=>queue.push({p:x,model:modelsOf(x)[0]}));
 if(!queue.length){m.pending=false;m.err='Belum ada penyedia AI yang siap. Buka Pengaturan > Penyedia AI dan tempel API key gratis.';save();renderChat();return}
+m.t0=Date.now();
+if(relayOn()){const r=await runRelay(c,m,queue);if(r===true)return;if(!m.note)m.note='Server latar belakang tidak bisa dihubungi, jadi dijawab langsung.'}
 const my=new AbortController();ctrl=my;setBusy(true);
-t0=Date.now();clearInterval(tick);tick=setInterval(()=>{const e=$('#msgs .tt');if(e){const s=Math.round((Date.now()-t0)/1000);e.textContent=s>2?'Berpikir… '+s+' dtk':'Berpikir…'}},1000);
+t0=m.t0||Date.now();
 const turns=buildTurns(c);
 const tried=[];let done=false;
 for(const q of queue){
 if(my.signal.aborted||!q.model)continue;
 let raw='',rth='';m.content='';m.think='';
-const on={text:d=>{raw+=d;const s=splitThink(raw);m.content=s.text;if(s.think)m.think=s.think;if(m.pending&&s.text){m.pending=false;m.secs=Math.round((Date.now()-t0)/1000)}paint(m)},think:d=>{rth+=d;m.think=rth;paint(m)},note:n=>{m.note=n}};
+const on={text:d=>{keep();raw+=d;const s=splitThink(raw);m.content=s.text;if(s.think)m.think=s.think;if(m.pending&&s.text){m.pending=false;m.secs=Math.round((Date.now()-t0)/1000)}paint(m)},think:d=>{keep();rth+=d;m.think=rth;paint(m)},note:n=>{m.note=n}};
 try{
 await callP(q.p,q.model,sysPrompt(c,q.p,q.model),turns,st.set.effort,my.signal,on);
 m.model=shortModel(q.model)+', '+q.p.n;
@@ -695,10 +715,42 @@ clearInterval(tick);if(raf){cancelAnimationFrame(raf);raf=0}
 if(!done&&tried.length){const l=tried[tried.length-1];m.err=errMsg(l.e,l.p);if(tried.length>1)m.err+=' (Sudah dicoba: '+tried.map(x=>x.p.n).join(', ')+'.)'}
 if(done&&!m.content&&!m.note&&!m.err)m.err='Penyedia tidak mengirim jawaban. Tekan Ulangi atau pilih model lain.';
 if(!m.secs)m.secs=Math.round((Date.now()-t0)/1000);
-m.pending=false;ctrl=null;setBusy(false);c.t=Date.now();save();renderNav();renderChat();
+delete m.live;m.pending=false;ctrl=null;setBusy(busyNow());c.t=Date.now();save();renderNav();renderChat();
+}
+async function runRelay(c,m,queue){
+const id=c.id+'-'+uid6();
+const body={id,chat:c.id,title:c.title,req:{turns:buildTurns(c),eff:st.set.effort},queue:queue.map(q=>({pv:q.p.id,name:q.p.n,kind:q.p.kind,base:baseOf(q.p),key:(pcfg(q.p.id).key||'').trim(),model:q.model,sys:sysPrompt(c,q.p,q.model),headers:q.p.id==='openrouter'?{'HTTP-Referer':location.origin,'X-Title':'Obsidia'}:undefined})).filter(q=>/^https:/.test(q.base))};
+if(!body.queue.length)return false;
+if(JSON.stringify(body).length>3.5e6){m.note='Lampiran terlalu besar untuk server, jadi dijawab langsung.';return false}
+try{await relay('POST','/jobs',body)}catch(e){if(e.status===401)toast('Kata sandi server salah. Periksa Pengaturan > Latar belakang.');return false}
+m.job=id;save();renderChat();pollJob(c,m);return true;
+}
+const polls=new Set();
+const waitVisible=()=>new Promise(r=>{if(document.visibilityState==='visible')return r();const f=()=>{if(document.visibilityState==='visible'){document.removeEventListener('visibilitychange',f);r()}};document.addEventListener('visibilitychange',f)});
+async function pollJob(c,m){
+const id=m.job;if(!id||polls.has(id))return;polls.add(id);let fails=0;
+try{for(;;){
+if(m.job!==id||!st.convs.includes(c))return;
+await waitVisible();
+let s;try{s=await relay('GET','/jobs/'+id);fails=0}catch(e){if(e.status===401){finishJob(c,m,{state:'error',tried:[{name:'Server',status:401,msg:'Kata sandi server salah. Periksa Pengaturan > Latar belakang.'}]});return}if(++fails>40){finishJob(c,m,{state:'lost'});return}await sleep(3000);continue}
+if(m.job!==id)return;
+if(['done','error','cancelled','missing'].includes(s.state)){finishJob(c,m,s);return}
+await sleep(1500);
+}}finally{polls.delete(id)}
+}
+function finishJob(c,m,s){
+const id=m.job;if(!id)return;
+if(s.state==='done'){const sp=splitThink(s.text||'');m.content=sp.text;m.think=s.think||sp.think||'';m.model=shortModel(s.model)+', '+(s.provider||'');m.err='';if(s.tried&&s.tried.length)m.note=s.tried.map(x=>x.name).join(' dan ')+' sedang tidak bisa dipakai, jadi dijawab oleh '+s.provider+'.';if(s.pv&&(s.pv!==c.pv||s.model!==c.model)){c.pv=s.pv;c.model=s.model}}
+else if(s.state==='cancelled')m.note='Dihentikan.';
+else if(s.state==='missing'||s.state==='lost')m.err='Jawaban di server tidak ditemukan atau server tidak bisa dihubungi. Tekan Ulangi.';
+else{const l=(s.tried||[]).slice(-1)[0];m.err=!l?'Server gagal mengerjakan jawaban. Tekan Ulangi.':l.name==='Server'?l.msg:errMsg(mkErr(l.msg,l.status),P(l.pv)||{id:'',n:l.name});if(s.tried&&s.tried.length>1)m.err+=' (Sudah dicoba: '+s.tried.map(x=>x.name).join(', ')+'.)'}
+m.secs=s.started&&s.finished?Math.round((s.finished-s.started)/1000):Math.round((Date.now()-(m.t0||Date.now()))/1000);
+m.pending=false;delete m.live;delete m.job;c.t=Date.now();save();renderNav();if(cur()===c)renderChat();setBusy(busyNow());
+if(s.state!=='missing'&&s.state!=='lost')relay('DELETE','/jobs/'+id).catch(()=>{});
 }
 async function send(){
 if(ctrl){ctrl.abort();return}
+const cc=cur(),jm=cc&&cc.msgs.find(x=>x.job);if(jm){relay('POST','/jobs/'+jm.job+'/cancel').catch(()=>{});finishJob(cc,jm,{state:'cancelled'});return}
 const text=$('#ta').value.trim();if(!text&&!pend.length)return;
 const mm=text.match(/^(?:tolong\s+)?ingat(?:lah)?(?:\s+bahwa)?\s+(.{3,300})$/i);
 if(mm&&st.set.useMem){const f=mm[1].trim();if(!st.mem.some(x=>x.text===f)){st.mem.push({id:uid6(),text:f,t:Date.now()});toast('Disimpan ke memori.')}}
@@ -779,7 +831,7 @@ function openSet(tab){
 $('#sName').value=st.set.name;$('#sInstr').value=st.set.instr;$('#sStyle').innerHTML=Object.entries(STY).map(([k,v])=>`<option value="${k}"${k===st.set.style?' selected':''}>${v.n}: ${v.d}</option>`).join('');
 $('#sCtx').value=String(st.set.ctx);$('#sTheme').value=st.set.theme||'';
 $('#sVoice').innerHTML='<option value="">Otomatis</option>'+voices().map(v=>`<option value="${esc(v.name)}"${v.name===st.set.voice?' selected':''}>${esc(v.name)}</option>`).join('');
-$('#mUse').checked=st.set.useMem;renderMem();renderPv();$('#dConfirm').hidden=true;
+$('#mUse').checked=st.set.useMem;$('#rUrl').value=st.relay.url||'';$('#rPw').value=st.relay.pw||'';$('#rOn').checked=!!st.relay.on;$('#rMsg').textContent='';renderMem();renderPv();$('#dConfirm').hidden=true;
 setTab(tab||(PROVIDERS.some(isReady)?'umum':'prov'));$('#setM').classList.add('on');closeSide();
 }
 function setTab(t){$$('#stabs button').forEach(b=>b.classList.toggle('on',b.dataset.s===t));$$('#setM section').forEach(s=>s.hidden=s.dataset.sec!==t)}
@@ -865,10 +917,10 @@ const b=e.target.closest('[data-act]');if(!b)return;const c=cur();if(!c)return;c
 if(a==='copy')copy(b,c.msgs[n].content);
 if(a==='cc')copy(b,b.closest('.code').querySelector('code').textContent);
 if(a==='pv')openArt(b.closest('.code').querySelector('code').textContent,b.dataset.l);
-if(a==='regen'&&!ctrl){if(c.msgs[c.msgs.length-1].role==='assistant')c.msgs.pop();if(c.msgs.length&&c.msgs[c.msgs.length-1].role==='user')run(c)}
-if(a==='edit'&&!ctrl){editing=n;renderChat()}
+if(a==='regen'&&!busyNow()){if(c.msgs[c.msgs.length-1].role==='assistant')c.msgs.pop();if(c.msgs.length&&c.msgs[c.msgs.length-1].role==='user')run(c)}
+if(a==='edit'&&!busyNow()){editing=n;renderChat()}
 if(a==='ecancel'){editing=-1;renderChat()}
-if(a==='esave'&&!ctrl){const v=$('#editTa').value.trim();const old=c.msgs[editing];if(!v&&!(old.att&&old.att.length))return;c.msgs=c.msgs.slice(0,editing);c.msgs.push({role:'user',content:v,att:old.att||[]});editing=-1;run(c)}
+if(a==='esave'&&!busyNow()){const v=$('#editTa').value.trim();const old=c.msgs[editing];if(!v&&!(old.att&&old.att.length))return;c.msgs=c.msgs.slice(0,editing);c.msgs.push({role:'user',content:v,att:old.att||[]});editing=-1;run(c)}
 if(a==='say')say(n);
 });
 $('#mic').addEventListener('click',()=>{
@@ -909,12 +961,12 @@ $('#mUse').addEventListener('change',e=>{st.set.useMem=e.target.checked;save()})
 $('#mAdd').addEventListener('click',()=>{const v=$('#mNew').value.trim();if(!v)return;st.mem.push({id:uid6(),text:v.slice(0,300),t:Date.now()});$('#mNew').value='';save();renderMem()});
 $('#mNew').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#mAdd').click()}});
 $('#mList').addEventListener('click',e=>{const b=e.target.closest('[data-mdel]');if(!b)return;st.mem=st.mem.filter(x=>x.id!==b.dataset.mdel);save();renderMem()});
-$('#dExp').addEventListener('click',()=>{const d=snap();if(!$('#dKeys').checked)d.prov=Object.fromEntries(Object.entries(d.prov||{}).map(([k,v])=>[k,Object.assign({},v,{key:''})]));d.app='obsidia';d.v=1;dlFile('obsidia-cadangan-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(d),'application/json')});
+$('#dExp').addEventListener('click',()=>{const d=snap();if(!$('#dKeys').checked)d.prov=Object.fromEntries(Object.entries(d.prov||{}).map(([k,v])=>[k,Object.assign({},v,{key:''})]));if(!$('#dKeys').checked&&d.relay)d.relay=Object.assign({},d.relay,{pw:''});d.app='obsidia';d.v=1;dlFile('obsidia-cadangan-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(d),'application/json')});
 $('#dImp').addEventListener('click',()=>$('#dFile').click());
 $('#dFile').addEventListener('change',async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const d=JSON.parse(await f.text());if(d.app!=='obsidia'||!Array.isArray(d.convs))throw 0;
 const ids=new Set(st.convs.map(c=>c.id));d.convs.forEach(c=>{if(c&&c.id&&Array.isArray(c.msgs)){if(ids.has(c.id))st.convs=st.convs.filter(x=>x.id!==c.id);st.convs.push(c)}});
 (d.projs||[]).forEach(p=>{if(p&&p.id&&!st.projs.some(x=>x.id===p.id))st.projs.push(p)});(d.mem||[]).forEach(m=>{if(m&&m.text&&!st.mem.some(x=>x.text===m.text))st.mem.push(m)});
-if(d.set)st.set=Object.assign(st.set,d.set);Object.entries(d.prov||{}).forEach(([k,v])=>{const c=pcfg(k);if(v.key)c.key=v.key;if(v.base)c.base=v.base;if(Array.isArray(v.models)&&v.models.length)c.models=v.models;if(v.on)c.on=true});
+if(d.set)st.set=Object.assign(st.set,d.set);if(d.relay){st.relay.url=d.relay.url||st.relay.url;if(d.relay.pw)st.relay.pw=d.relay.pw;st.relay.on=!!d.relay.on&&!!st.relay.pw}Object.entries(d.prov||{}).forEach(([k,v])=>{const c=pcfg(k);if(v.key)c.key=v.key;if(v.base)c.base=v.base;if(Array.isArray(v.models)&&v.models.length)c.models=v.models;if(v.on)c.on=true});
 save();renderAll();closeMods();toast('Cadangan dipulihkan: '+d.convs.length+' chat.')}catch(err){toast('Berkas cadangan tidak valid.')}});
 $('#dDel').addEventListener('click',()=>{$('#dConfirm').hidden=false});
 $('#dYes').addEventListener('click',()=>{if(ctrl)return;st.convs=[];st.cur=null;save();closeMods();toast('Semua chat dihapus.')});
@@ -927,17 +979,50 @@ save();closeMods();renderNav();toast('Proyek disimpan.')});
 $('#pDel').addEventListener('click',()=>{if(!projEdit)return;const id=projEdit.id;st.projs=st.projs.filter(p=>p.id!==id);st.convs.forEach(c=>{if(c.proj===id)c.proj=null});if(st.view===id)st.view=null;save();closeMods();renderNav();toast('Proyek dihapus. Chat-nya tetap ada.')});
 $('#chips').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(!b)return;const t=$('#ta');t.value=b.dataset.p;sizeTa();t.focus();t.setSelectionRange(t.value.length,t.value.length)});
 
+/* ---------- latar belakang ---------- */
+setInterval(()=>$$('.tt[data-t0]').forEach(e=>{const s=Math.round((Date.now()-+e.dataset.t0)/1000);e.textContent=e.dataset.l+'…'+(s>2?' '+s+' dtk':'')}),1000);
+function openFromUrl(u){try{const id=new URL(u,location.href).searchParams.get('job');if(!id)return;const c=st.convs.find(x=>x.id===id.split('-')[0]);if(c&&!ctrl){st.cur=c.id;st.view=c.proj||null;renderNav();renderChat();toBottom()}}catch(e){}}
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='open')openFromUrl(e.data.url)});
+const rMsg=(t,k)=>{const e=$('#rMsg');e.className='msgp'+(k?' '+k:'');e.textContent=t};
+$('#rUrl').addEventListener('input',e=>{st.relay.url=e.target.value.trim();if(!relayOn()){st.relay.on=false;$('#rOn').checked=false}save();applySettings()});
+$('#rPw').addEventListener('input',e=>{st.relay.pw=e.target.value;if(!relayOn()){st.relay.on=false;$('#rOn').checked=false}save();applySettings()});
+$('#rShow').addEventListener('click',e=>{const i=$('#rPw');i.type=i.type==='password'?'text':'password';e.currentTarget.textContent=i.type==='password'?'Lihat':'Sembunyikan'});
+$('#rOn').addEventListener('change',e=>{if(e.target.checked&&!(/^https:\/\//.test(st.relay.url||'')&&st.relay.pw)){e.target.checked=false;rMsg('Isi alamat server (https) dan kata sandi dulu.','bad');return}st.relay.on=e.target.checked;save();applySettings();rMsg(st.relay.on?'Mode latar belakang aktif. Jawaban baru akan dikerjakan di server.':'Mode latar belakang mati. Jawaban dikerjakan langsung di aplikasi.',st.relay.on?'ok':'')});
+$('#rTest').addEventListener('click',async e=>{if(!/^https:\/\//.test(st.relay.url||'')||!st.relay.pw){rMsg('Isi alamat server (https) dan kata sandi dulu.','bad');return}const b=e.currentTarget;b.disabled=true;rMsg('Menghubungi server…');try{const r=await relay('GET','/ping');rMsg('Server tersambung. '+(r.subs?r.subs+' perangkat terdaftar untuk notifikasi.':'Belum ada perangkat untuk notifikasi.'),'ok')}catch(err){rMsg(err.status===401?'Kata sandi salah.':err.status===500?err.message:'Server tidak bisa dihubungi. Periksa alamatnya.','bad')}b.disabled=false});
+$('#rPush').addEventListener('click',async e=>{
+const ios=/iPhone|iPad|iPod/.test(navigator.userAgent),standalone=matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){rMsg(ios&&!standalone?'Buka Obsidia dari ikon di Layar Utama dulu (Bagikan > Tambahkan ke Layar Utama), lalu tekan tombol ini lagi.':'Browser ini tidak mendukung notifikasi.','bad');return}
+if(!/^https:\/\//.test(st.relay.url||'')||!st.relay.pw){rMsg('Isi alamat server dan kata sandi dulu.','bad');return}
+const b=e.currentTarget;b.disabled=true;
+try{
+const perm=await Notification.requestPermission();
+if(perm!=='granted'){rMsg(ios?'Izin notifikasi ditolak. Aktifkan di Pengaturan iPhone > Notifikasi > Obsidia.':'Izin notifikasi ditolak. Aktifkan lewat pengaturan situs di browser.','bad');return}
+rMsg('Mendaftarkan perangkat…');
+const reg=await navigator.serviceWorker.ready;
+const {key}=await relay('GET','/vapid');const appKey=b64d(key);
+let sub=await reg.pushManager.getSubscription();
+if(sub&&sub.options&&sub.options.applicationServerKey){const old=new Uint8Array(sub.options.applicationServerKey);if(old.length!==appKey.length||old.some((v,i)=>v!==appKey[i])){await sub.unsubscribe();sub=null}}
+if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:appKey});
+await relay('POST','/subscribe',{sub:sub.toJSON(),origin:location.origin});
+st.relay.push=true;save();rMsg('Notifikasi aktif di perangkat ini. Tekan "Kirim notifikasi uji" untuk mencoba.','ok');
+}catch(err){rMsg(err.status===401?'Kata sandi salah.':'Gagal mengaktifkan notifikasi: '+(err.message||err),'bad')}
+finally{b.disabled=false}});
+$('#rPushTest').addEventListener('click',async e=>{const b=e.currentTarget;b.disabled=true;try{const r=await relay('POST','/test-push');rMsg(r.sent?'Notifikasi uji terkirim ke '+r.sent+' perangkat. Kunci layar atau pindah aplikasi untuk melihatnya.':'Belum ada perangkat terdaftar. Tekan "Aktifkan notifikasi" dulu.',r.sent?'ok':'bad')}catch(err){rMsg(err.status===401?'Kata sandi salah.':'Server tidak bisa dihubungi.','bad')}b.disabled=false});
+
 /* ---------- mulai ---------- */
 (async()=>{
 idb=await openDB();
 let d=await idbGet('state');
 if(!d){try{const r=localStorage.getItem('obsidia');if(r)d=JSON.parse(r)}catch(e){}}
 if(d&&typeof d==='object'){st=Object.assign(st,d,{set:Object.assign(st.set,d.set||{})})}
+st.relay=Object.assign({url:'',pw:'',on:false,push:false},st.relay||{});
 ['convs','projs','mem'].forEach(k=>{if(!Array.isArray(st[k]))st[k]=[]});if(!st.prov||typeof st.prov!=='object')st.prov={};
 if(!d)st.convs=seed();
-st.convs.forEach(c=>c.msgs.forEach(m=>{if(m.pending){m.pending=false;if(!m.content)m.err='Jawaban tidak selesai.'}}));
+st.convs.forEach(c=>c.msgs.forEach(m=>{if(m.job){m.pending=true;m.live=true;return}if(m.pending||m.live){m.pending=false;delete m.live;if(m.content)m.note='Jawaban terputus karena aplikasi ditutup atau ditinggal. Tekan Ulangi untuk meminta jawaban lengkap.';else m.err='Jawaban tidak selesai karena aplikasi ditutup atau ditinggal. Tekan Ulangi.'}}));
 if(SR)$('#mic').hidden=false;
 renderAll();sizeTa();
+st.convs.forEach(c=>c.msgs.forEach(m=>{if(m.job)pollJob(c,m)}));
+openFromUrl(location.href);try{if(location.search)history.replaceState(null,'',location.pathname)}catch(e){}
 if(!PROVIDERS.some(isReady))setTimeout(()=>{if(!$('.mod.on'))openSet('prov')},400);
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))navigator.serviceWorker.register('sw.js').catch(()=>{});
