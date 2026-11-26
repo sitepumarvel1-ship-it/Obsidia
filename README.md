@@ -19,7 +19,8 @@ Aplikasi chat AI pribadi yang memakai API gratis dari berbagai penyedia. Semua c
 Buka dari menu kiri. Keduanya memakai penyedia AI yang sudah kamu atur.
 
 - **Studio Slide:** tekan **Buat dengan AI**, tulis topiknya, lalu atur template, warna (bisa dibuat dari satu warna atau diacak), font, dan animasi. **Presentasikan** menampilkan slide layar penuh dengan animasi. **PowerPoint** mengekspor `.pptx` (dengan transisi dan animasi masuk sederhana), **HTML** mengekspor presentasi yang bisa dibuka di browser mana pun dengan animasi lengkap.
-- **Studio Video:** pilih template (promo, story, edukasi, kutipan, slideshow foto, acara, tutorial, fakta), tekan **Buat dengan AI**, lalu atur adegan, animasi teks, transisi, musik, dan narasi. **Ekspor video** merekam video secara langsung, jadi durasi ekspor sama dengan durasi video. Biarkan layar menyala dan jangan pindah aplikasi selama ekspor.
+- **Studio Video, mode Video AI dari foto:** pilih foto, tulis mau jadi video seperti apa (atau ketuk contoh gerakan), atur durasi (sampai 5 detik) dan kualitas, lalu tekan **Buat video**. Video dibuat gratis oleh model Wan 2.2 di Hugging Face. Kamu perlu akun Hugging Face dan token jenis **Read** dari huggingface.co/settings/tokens, tempel di bagian **Akun Hugging Face**. Kuota GPU gratis cukup untuk sekitar 2–3 video per hari dan pulih setelah 24 jam. Satu video makan waktu sekitar 1–5 menit, tergantung antrean. Bila mode latar belakang aktif, video dikerjakan di server sehingga Obsidia boleh ditutup; hasilnya muncul di daftar **Hasil video** saat Obsidia dibuka lagi. Tanpa mode latar belakang, biarkan Obsidia terbuka sampai selesai.
+- **Studio Video, mode Video template:** pilih template (promo, story, edukasi, kutipan, slideshow foto, acara, tutorial, fakta), tekan **Buat dengan AI**, lalu atur adegan, animasi teks, transisi, musik, dan narasi. **Ekspor video** merekam video secara langsung, jadi durasi ekspor sama dengan durasi video. Biarkan layar menyala dan jangan pindah aplikasi selama ekspor.
 - Di iPhone, file hasil ekspor muncul di menu Bagikan: pilih **Simpan Video** atau **Simpan ke File**.
 
 ## Cara pasang di GitHub Pages
@@ -124,3 +125,5 @@ Setelah itu, setiap pesan baru dikerjakan di server. Ketuk notifikasi "Jawaban s
 - Ollama tetap dijawab langsung karena berjalan di komputermu.
 - Server hanya mau melayani permintaan dengan kata sandimu. API key ikut dikirim ke server saat ada tugas, lalu dihapus begitu jawaban selesai. Jawaban dihapus dari server setelah diambil Obsidia, atau paling lambat 24 jam.
 - Penyedia yang menolak akses langsung dari browser biasanya tetap bisa dipakai lewat server.
+- Video AI juga dikerjakan di server bila mode ini aktif. Token Hugging Face dan foto dihapus dari server begitu video selesai, dan videonya dihapus setelah diambil Obsidia.
+- **Sudah memasang server sebelum fitur Video AI ada?** Ganti file `relay/src/index.js` di repo GitHub-mu dengan versi baru dari paket ini. Cloudflare memasang ulang server secara otomatis dalam 1–2 menit.

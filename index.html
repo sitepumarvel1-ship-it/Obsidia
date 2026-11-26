@@ -1001,13 +1001,13 @@ for(const q of queue){if(!q.model)continue;let raw='';try{await callP(q.p,q.mode
 throw last||mkErr('Belum ada penyedia AI yang siap. Buka Pengaturan > Penyedia AI.',401);
 }
 async function saveBlob(blob,name){const file=new File([blob],name,{type:blob.type});try{if(navigator.canShare&&matchMedia('(pointer:coarse)').matches&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}const u=URL.createObjectURL(blob);const a=document.createElement('a');a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);toast('Berkas diunduh: '+name)}
-window.OBS={esc,ico,toast,idbGet,idbSet,askAI,saveBlob,providersReady:()=>PROVIDERS.some(isReady),openSettings:()=>openSet('prov'),errText:e=>e.status===422?e.message:errMsg(e,e.prov||curSel().p)};
+window.OBS={esc,ico,toast,idbGet,idbSet,askAI,saveBlob,relayOn,relay,relayRaw:(path,init={})=>fetch(st.relay.url.replace(/\/+$/,'')+path,Object.assign({},init,{headers:Object.assign({'Authorization':'Bearer '+st.relay.pw},init.headers||{})})),providersReady:()=>PROVIDERS.some(isReady),openSettings:()=>openSet('prov'),errText:e=>e.status===422?e.message:errMsg(e,e.prov||curSel().p)};
 $('#slideBtn').addEventListener('click',()=>goStudio('slides'));
 $('#videoBtn').addEventListener('click',()=>goStudio('video'));
 
 /* ---------- latar belakang ---------- */
 setInterval(()=>$$('.tt[data-t0]').forEach(e=>{const s=Math.round((Date.now()-+e.dataset.t0)/1000);e.textContent=e.dataset.l+'…'+(s>2?' '+s+' dtk':'')}),1000);
-function openFromUrl(u){try{const id=new URL(u,location.href).searchParams.get('job');if(!id)return;const c=st.convs.find(x=>x.id===id.split('-')[0]);if(c&&!ctrl){st.cur=c.id;st.view=c.proj||null;renderNav();renderChat();toBottom()}}catch(e){}}
+function openFromUrl(u){try{if(new URL(u,location.href).searchParams.get('video')){goStudio('video');return}const id=new URL(u,location.href).searchParams.get('job');if(!id)return;const c=st.convs.find(x=>x.id===id.split('-')[0]);if(c&&!ctrl){st.cur=c.id;st.view=c.proj||null;renderNav();renderChat();toBottom()}}catch(e){}}
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',e=>{if(e.data&&e.data.type==='open')openFromUrl(e.data.url)});
 const rMsg=(t,k)=>{const e=$('#rMsg');e.className='msgp'+(k?' '+k:'');e.textContent=t};
 $('#rUrl').addEventListener('input',e=>{st.relay.url=e.target.value.trim();if(!relayOn()){st.relay.on=false;$('#rOn').checked=false}save();applySettings()});

@@ -82,10 +82,10 @@ const loadImg = src => new Promise((res, rej) => { const im = new Image(); im.on
 async function fileToData(f, max = 1600) { const url = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); }); if (!/^image\//.test(f.type) || f.type === 'image/gif') return url; const im = await loadImg(url); const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight)); const c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', .86); }
 
 /* ================= penyimpanan ================= */
-let ST = { decks: [], videos: [], deck: null, video: null };
+let ST = { decks: [], videos: [], deck: null, video: null, vmode: 'ai', aivids: [], aiImg: null, aiPrompt: '', aiDur: 3.5, aiSteps: 6, aiEnh: true, hf: { token: '', space: 'zerogpu-aoti/wan2-2-fp8da-aoti-faster' } };
 let saveT = 0;
 const save = () => { clearTimeout(saveT); saveT = setTimeout(() => O.idbSet('studio', ST), 400); };
-const loadState = (async () => { const d = await O.idbGet('studio'); if (d && typeof d === 'object') ST = Object.assign(ST, d); })();
+const loadState = (async () => { const d = await O.idbGet('studio'); if (d && typeof d === 'object') ST = Object.assign(ST, d); (ST.aivids || []).forEach(x => { if (x.status === 'pending' && !x.job) { x.status = 'error'; x.err = 'Terhenti karena Obsidia ditutup sebelum video selesai. Aktifkan mode latar belakang agar tetap berjalan.'; delete x.stage; } }); })();
 const hist = [];
 function commit(fn) { hist.push(JSON.stringify(ST)); if (hist.length > 40) hist.shift(); fn(); save(); }
 function undo(rerender) { const s = hist.pop(); if (!s) { O.toast('Tidak ada yang bisa diurungkan.'); return; } ST = JSON.parse(s); save(); rerender(); }
@@ -658,6 +658,163 @@ async function recordVideo(V, q, ac, onProg, isCancelled) {
   return { blob: new Blob(chunks, { type }), ext: type.includes('mp4') ? 'mp4' : 'webm' };
 }
 
+/* ---------- Video AI dari foto (Hugging Face) ---------- */
+const HF_SPACES = [{ id: 'zerogpu-aoti/wan2-2-fp8da-aoti-faster', n: 'Wan 2.2 Cepat (14B)', fn: 'generate_video', max: 5 }];
+const HF_NEG = '色调艳丽, 过曝, 静态, 细节模糊不清, 字幕, 风格, 作品, 画作, 画面, 静止, 整体发灰, 最差质量, 低质量, JPEG压缩残留, 丑陋的, 残缺的, 多余的手指, 画得不好的手部, 画得不好的脸部, 畸形的, 毁容的, 形态畸形的肢体, 手指融合, 静止不动的画面, 杂乱的背景, 三条腿, 背景人很多, 倒着走';
+const PROMPTS = [['Kamera mendekat', 'Kamera bergerak pelan mendekat ke subjek, gerakan halus dan sinematik'], ['Tertiup angin', 'Rambut dan pakaian tertiup angin sepoi-sepoi, daun di latar bergoyang'], ['Ombak & awan', 'Ombak bergulung pelan dan awan bergerak di langit, suasana tenang'], ['Tersenyum melambai', 'Orang di foto tersenyum lalu melambaikan tangan ke kamera'], ['Slow motion', 'Gerakan slow motion sinematik dengan cahaya lembut dan kedalaman ruang'], ['Kamera mengitari', 'Kamera berputar pelan mengitari subjek, latar bergeser alami'], ['Hujan turun', 'Hujan rintik turun, tetesan air memantulkan cahaya'], ['Hidup & dinamis', 'Buat foto ini hidup dengan gerakan alami, sinematik, dan halus']];
+const STEPS = [[4, 'Cepat'], [6, 'Seimbang'], [8, 'Terbaik']];
+const aivURL = new Map(), aiCtl = new Map(), aiPolls = new Set();
+const hfE = (m, st) => { const e = new Error(m); e.status = st || 0; return e; };
+function hfMsg(e) {
+  const t = String((e && e.message) || e || ''), s = e && e.status;
+  if (s === 401 || s === 403 || /token/i.test(t) && /tolak|invalid|unauthor/i.test(t)) return 'Token Hugging Face salah atau tidak berlaku. Periksa di bagian Akun Hugging Face.';
+  if (s === 429 || /quota|exceeded/i.test(t)) return 'Kuota GPU gratis harian Hugging Face sudah habis. Kuota pulih 24 jam setelah pemakaian pertama hari ini.';
+  if (/no gpu|gpu.*(available|busy)|queue is full/i.test(t)) return 'GPU Hugging Face sedang penuh. Coba lagi beberapa menit lagi.';
+  if (s === 503 || /dinyalakan|sleeping|building|starting/i.test(t)) return 'Space Hugging Face sedang dinyalakan. Coba lagi 1–2 menit lagi.';
+  if (!s && /fetch|network|failed/i.test(t)) return 'Tidak bisa terhubung ke Hugging Face. Periksa internet, atau aktifkan mode latar belakang di Pengaturan.';
+  return t || 'Video gagal dibuat. Coba lagi.';
+}
+async function hfHostOf(space, auth) {
+  try { const r = await fetch('https://huggingface.co/api/spaces/' + space + '/host', { headers: auth }); if (r.ok) { const j = await r.json(); if (j && j.host) return String(j.host).replace(/\/+$/, ''); } if (r.status === 401 || r.status === 403) throw hfE('Token Hugging Face ditolak.', 401); } catch (e) { if (e.status === 401) throw e; }
+  return 'https://' + space.replace(/[\/._]/g, '-').toLowerCase() + '.hf.space';
+}
+async function hfDirect(job, onStage, signal) {
+  const auth = job.token ? { Authorization: 'Bearer ' + job.token } : {};
+  onStage('Menghubungi Hugging Face…');
+  const host = await hfHostOf(job.space, auth);
+  const img = await (await fetch(job.image)).blob();
+  let base = null, up = null;
+  onStage('Mengunggah foto…');
+  for (const b of [host + '/gradio_api', host]) {
+    const fd = new FormData(); fd.append('files', img, 'foto.jpg');
+    const r = await fetch(b + '/upload', { method: 'POST', headers: auth, body: fd, signal });
+    if (r.status === 404) continue;
+    if (r.status === 401 || r.status === 403) throw hfE('Token Hugging Face ditolak.', 401);
+    if (r.status === 502 || r.status === 503) throw hfE('Space sedang dinyalakan', 503);
+    if (!r.ok) throw hfE('Gagal mengunggah foto (HTTP ' + r.status + ').', r.status);
+    up = await r.json(); base = b; break;
+  }
+  if (!base || !Array.isArray(up) || !up[0]) throw hfE('Space tidak dapat dihubungi. Mungkin sedang mati atau berubah.', 404);
+  const call = await fetch(base + '/call/' + job.fn, { method: 'POST', signal, headers: Object.assign({ 'Content-Type': 'application/json' }, auth), body: JSON.stringify({ data: [{ path: up[0], meta: { _type: 'gradio.FileData' }, orig_name: 'foto.jpg' }, ...job.params] }) });
+  if (!call.ok) throw hfE('Space menolak permintaan (HTTP ' + call.status + ').', call.status);
+  const { event_id } = await call.json();
+  onStage('Menunggu GPU dan membuat video…');
+  const res = await fetch(base + '/call/' + job.fn + '/' + event_id, { headers: auth, signal });
+  if (!res.ok || !res.body) throw hfE('Gagal membaca hasil (HTTP ' + res.status + ').', res.status);
+  const rd = res.body.getReader(), dec = new TextDecoder(); let buf = '', ev = 'message', out = null;
+  outer: for (;;) { const { done, value } = await rd.read(); if (done) break; buf += dec.decode(value, { stream: true }); let i; while ((i = buf.indexOf('\n')) >= 0) { const line = buf.slice(0, i).replace(/\r$/, ''); buf = buf.slice(i + 1); if (line.startsWith('event:')) ev = line.slice(6).trim(); else if (line.startsWith('data:')) { const d = line.slice(5).trim(); if (ev === 'complete') { out = { ok: JSON.parse(d) }; break outer; } if (ev === 'error') { let m = d; try { m = JSON.parse(d); } catch (e) { } out = { err: String((m && (m.message || m.error || m)) || '') }; break outer; } } } }
+  try { rd.cancel(); } catch (e) { }
+  if (!out) throw hfE('Koneksi ke Space terputus sebelum video selesai.', 0);
+  if (out.err != null) throw hfE(!out.err || out.err === 'null' ? 'Space gagal membuat video. Bisa jadi kuota GPU gratis harian sudah habis.' : out.err, /quota|exceeded/i.test(out.err) ? 429 : 500);
+  const v = out.ok[0], fdv = (v && v.video) || v;
+  if (!fdv || !(fdv.url || fdv.path)) throw hfE('Space tidak mengirim video.', 500);
+  onStage('Mengunduh video…');
+  const vr = await fetch(fdv.url || base + '/file=' + fdv.path, { headers: auth, signal });
+  if (!vr.ok) throw hfE('Gagal mengunduh video (HTTP ' + vr.status + ').', vr.status);
+  return await vr.blob();
+}
+const curSpace = () => HF_SPACES.find(x => x.id === ST.hf.space) || HF_SPACES[0];
+async function smallThumb(src) { try { const im = await loadImg(src); const k = 360 / Math.max(im.naturalWidth, im.naturalHeight), c = document.createElement('canvas'); c.width = Math.round(im.naturalWidth * k); c.height = Math.round(im.naturalHeight * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', .8); } catch (e) { return null; } }
+function aiCard(it) {
+  const st = it.status === 'pending' ? `<div class="aistat"><span class="dots"><i></i><i></i><i></i></span><span class="tt" data-t0="${it.created}" data-l="${esc(it.stage || 'Membuat video')}">${esc(it.stage || 'Membuat video')}…</span></div><p class="sfine">${it.job ? 'Dikerjakan di server. Boleh tutup Obsidia, hasilnya tersimpan di sini.' : 'Biarkan Obsidia tetap terbuka sampai selesai.'}</p><button type="button" class="btn" data-acancel="${it.id}">Batalkan</button>`
+    : it.status === 'error' ? `<p class="err">${esc(it.err || 'Gagal')}</p><div class="prow"><button type="button" class="btn" data-aretry="${it.id}">${ico('redo')} Coba lagi</button><button type="button" class="btn dan" data-adel="${it.id}">${ico('trash')} Hapus</button></div>`
+    : `<video class="aivid" data-avid="${it.id}" controls loop playsinline muted preload="metadata" ${it.thumb ? `poster="${esc(it.thumb)}"` : ''}></video><div class="prow"><button type="button" class="btn" data-asave="${it.id}">${ico('down')} Simpan</button><button type="button" class="btn" data-areuse="${it.id}">${ico('redo')} Buat lagi</button><button type="button" class="btn dan" data-adel="${it.id}">${ico('trash')} Hapus</button></div>`;
+  return `<div class="aicard" data-aid="${it.id}">${it.status !== 'done' && it.thumb ? `<img class="aithumb" src="${esc(it.thumb)}" alt="">` : ''}<div class="aibody"><p class="aip">${esc(it.prompt)}</p><p class="sfine">${(+it.dur).toFixed(1)} detik, ${(STEPS.find(x => x[0] === it.steps) || ['', ''])[1].toLowerCase()}, ${esc(rel(it.created))}</p>${st}</div></div>`;
+}
+const rel = t => { const x = (Date.now() - t) / 1000; return x < 60 ? 'baru saja' : x < 3600 ? Math.floor(x / 60) + ' menit lalu' : x < 86400 ? Math.floor(x / 3600) + ' jam lalu' : new Date(t).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }); };
+function modeBar() { return `<div class="modesw" role="tablist"><button type="button" role="tab" class="${ST.vmode !== 'tpl' ? 'on' : ''}" data-vmode="ai">${ico('spark')} Video AI dari foto</button><button type="button" role="tab" class="${ST.vmode === 'tpl' ? 'on' : ''}" data-vmode="tpl">${ico('film')} Video template</button></div>`; }
+function renderAIV() {
+  const busy = ST.aivids.some(x => x.status === 'pending' && !x.job);
+  vRoot.innerHTML = `<div class="stu">${modeBar()}<div class="aiv">
+  <div class="aivl">
+    <button type="button" class="drop${ST.aiImg ? ' has' : ''}" id="aDrop" aria-label="Pilih foto">${ST.aiImg ? `<img src="${esc(ST.aiImg)}" alt="Foto yang dipilih"><span class="chg">Ganti foto</span>` : `${ico('img')}<b>Pilih foto</b><span>JPG atau PNG. Foto akan dihidupkan menjadi video.</span>`}</button><input type="file" id="aImgF" accept="image/*" hidden>
+    <div class="fld"><label for="aPrompt">Mau jadi video seperti apa?</label><textarea class="in" id="aPrompt" rows="3" placeholder="Contoh: kapal berlayar pelan, ombak bergerak, kamera menjauh perlahan">${esc(ST.aiPrompt)}</textarea></div>
+    <div class="chipset">${PROMPTS.map((p, k) => `<button type="button" class="schip" data-pp="${k}">${p[0]}</button>`).join('')}</div>
+    <label class="chk"><input type="checkbox" id="aEnh"${ST.aiEnh ? ' checked' : ''}>Sempurnakan perintah dengan AI chat (diterjemahkan ke bahasa Inggris agar lebih dipahami)</label>
+    <div class="fld"><label for="aDur">Durasi: <b id="aDurL">${(+ST.aiDur).toFixed(1)} detik</b></label><input type="range" id="aDur" min="1.5" max="${curSpace().max}" step=".5" value="${ST.aiDur}"></div>
+    <p class="slab">Kualitas</p><div class="chipset">${STEPS.map(x => `<button type="button" class="schip${ST.aiSteps === x[0] ? ' on' : ''}" data-ast="${x[0]}">${x[1]}</button>`).join('')}</div>
+    <button type="button" class="btn pri wide" id="aGo"${busy ? ' disabled' : ''}>${ico('spark')} Buat video</button>
+    <p class="sfine" id="aMsg">${O.relayOn() ? 'Mode latar belakang aktif: video tetap dibuat walau Obsidia ditutup.' : 'Tanpa mode latar belakang, biarkan Obsidia terbuka sampai video selesai (1–5 menit).'}</p>
+    <details class="hfacc"${ST.hf.token ? '' : ' open'}><summary>Akun Hugging Face ${ST.hf.token ? '(tersambung)' : '(wajib diisi)'}</summary>
+      <p class="sfine">Video dibuat gratis di Hugging Face, sekitar 2–3 video per hari. Buat akun di huggingface.co, lalu buat token di <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener">huggingface.co/settings/tokens</a> dengan jenis <b>Read</b>.</p>
+      <div class="kr"><input class="in" id="aTok" type="password" value="${esc(ST.hf.token)}" placeholder="hf_..." autocomplete="off" spellcheck="false"><button type="button" class="btn" id="aTokT">Tes</button></div>
+      <p class="msgp" id="aTokM"></p>
+      <div class="fld"><label for="aSpace">Model</label><select class="in" id="aSpace">${HF_SPACES.map(x => `<option value="${x.id}"${x.id === ST.hf.space ? ' selected' : ''}>${x.n}</option>`).join('')}</select><small>Model Wan 2.2 dari Alibaba, hasil maksimal 5 detik, 16 fps, sisi terpanjang 832 piksel.</small></div>
+    </details>
+  </div>
+  <div class="aivr"><p class="slab">Hasil video</p>${ST.aivids.length ? ST.aivids.map(aiCard).join('') : '<p class="sfine">Belum ada video. Pilih foto, tulis perintah, lalu tekan Buat video.</p>'}</div>
+  </div></div>`;
+  $$('video[data-avid]', vRoot).forEach(async v => { const id = v.dataset.avid; let u = aivURL.get(id); if (!u) { const b = await O.idbGet('aiv:' + id); if (!b) return; u = URL.createObjectURL(b); aivURL.set(id, u); } v.src = u; });
+  ST.aivids.filter(x => x.status === 'pending' && x.job).forEach(pollAIV);
+}
+async function genAIV(reuse) {
+  const R = vRoot, msg = $('#aMsg', R);
+  if (reuse) { ST.aiPrompt = reuse.prompt; ST.aiDur = reuse.dur; ST.aiSteps = reuse.steps; }
+  if (!ST.aiImg) { O.toast('Pilih foto dulu.'); return; }
+  if (!ST.hf.token) { O.toast('Isi token Hugging Face dulu.'); const d = $('.hfacc', R); if (d) d.open = true; $('#aTok', R) && $('#aTok', R).focus(); return; }
+  const prompt = (ST.aiPrompt || '').trim() || PROMPTS[7][1];
+  const sp = curSpace(), dur = clamp(+ST.aiDur || 3.5, 1, sp.max), steps = ST.aiSteps || 6;
+  const it = { id: 'a' + uid(), prompt, dur, steps, created: Date.now(), status: 'pending', stage: 'Menyiapkan', thumb: await smallThumb(ST.aiImg) };
+  commit(() => ST.aivids.unshift(it)); renderAIV();
+  let en = prompt;
+  if (ST.aiEnh && O.providersReady()) { setStage(it, 'Menyempurnakan perintah'); try { en = String(await O.askAI('Kamu penulis prompt untuk AI pembuat video dari foto.', `Ubah perintah berikut menjadi prompt image-to-video berbahasa Inggris yang jelas dan sinematik, maksimal 60 kata. Fokus pada gerakan subjek, gerakan kamera, dan suasana. Jangan menambah objek yang tidak ada di foto. Balas hanya prompt-nya tanpa tanda kutip.\n\nPerintah: ${prompt}`, {})).trim().replace(/^["']|["']$/g, '').slice(0, 700) || prompt; } catch (e) { en = prompt; } }
+  it.promptEn = en;
+  const job = { space: sp.id, fn: sp.fn, token: ST.hf.token.trim(), image: ST.aiImg, params: [en, steps, HF_NEG, dur, 1, 1, Math.floor(Math.random() * 2147483647), true] };
+  if (O.relayOn()) {
+    try { setStage(it, 'Mengirim ke server'); await O.relay('POST', '/jobs', { id: it.id, kind: 'hfvideo', title: 'Video AI', hf: job }); it.job = it.id; it.stage = 'Dikerjakan di server'; save(); if (vRoot && ST.vmode !== 'tpl') renderAIV(); else pollAIV(it); return; }
+    catch (e) { O.toast('Server latar belakang tidak bisa dihubungi, video dibuat langsung.'); }
+  }
+  const ctl = new AbortController(); aiCtl.set(it.id, ctl);
+  try { const blob = await hfDirect(job, s => setStage(it, s.replace(/…$/, '')), ctl.signal); await O.idbSet('aiv:' + it.id, blob); it.status = 'done'; O.toast('Video AI siap.'); }
+  catch (e) { if (ctl.signal.aborted) { ST.aivids = ST.aivids.filter(x => x !== it); } else { it.status = 'error'; it.err = hfMsg(e); } }
+  aiCtl.delete(it.id); delete it.stage; save(); if (vRoot && ST.vmode !== 'tpl') renderAIV();
+}
+function setStage(it, s) { it.stage = s; const el = vRoot && $(`.aicard[data-aid="${it.id}"] .tt`, vRoot); if (el) el.dataset.l = s; }
+async function pollAIV(it) {
+  if (aiPolls.has(it.id)) return; aiPolls.add(it.id); let fails = 0;
+  try {
+    while (it.status === 'pending' && it.job && ST.aivids.includes(it)) {
+      let s; try { s = await O.relay('GET', '/jobs/' + it.job); fails = 0; } catch (e) { if (e.status === 401) { it.status = 'error'; it.err = 'Kata sandi server latar belakang salah.'; break; } if (++fails > 40) { it.status = 'error'; it.err = 'Server latar belakang tidak bisa dihubungi.'; break; } await new Promise(r => setTimeout(r, 4000)); continue; }
+      if (s.state === 'done') { setStage(it, 'Mengunduh video'); const r = await O.relayRaw('/jobs/' + it.job + '/video'); if (!r.ok) { it.status = 'error'; it.err = 'Video tidak bisa diambil dari server.'; break; } await O.idbSet('aiv:' + it.id, await r.blob()); it.status = 'done'; O.relay('DELETE', '/jobs/' + it.job).catch(() => { }); O.toast('Video AI siap.'); break; }
+      if (s.state === 'error') { const l = (s.tried || [])[0]; it.status = 'error'; it.err = hfMsg(hfE(l ? l.msg : 'Gagal', l ? l.status : 0)); O.relay('DELETE', '/jobs/' + it.job).catch(() => { }); break; }
+      if (s.state === 'missing' || s.state === 'cancelled') { it.status = 'error'; it.err = 'Tugas video tidak ditemukan di server. Tekan Coba lagi.'; break; }
+      setStage(it, s.state === 'running' ? 'Dikerjakan di server' : 'Mengantre di server');
+      await new Promise(r => setTimeout(r, 3000));
+    }
+  } finally { aiPolls.delete(it.id); delete it.stage; save(); if (vRoot && ST.vmode !== 'tpl') renderAIV(); }
+}
+function bindAIV() {
+  const R = vRoot;
+  R.addEventListener('click', async e => {
+    if (ST.vmode === 'tpl') return;
+    const b = e.target.closest('button'); if (!b) return;
+    const find = id => ST.aivids.find(x => x.id === id);
+    if (b.id === 'aDrop') { $('#aImgF', R).click(); return; }
+    if (b.dataset.pp != null) { const t = $('#aPrompt', R); ST.aiPrompt = PROMPTS[+b.dataset.pp][1]; t.value = ST.aiPrompt; save(); return; }
+    if (b.dataset.ast) { ST.aiSteps = +b.dataset.ast; save(); $$('[data-ast]', R).forEach(x => x.classList.toggle('on', x === b)); return; }
+    if (b.id === 'aGo') { genAIV(); return; }
+    if (b.id === 'aTokT') { const m = $('#aTokM', R); m.className = 'msgp'; m.textContent = 'Memeriksa…'; try { const r = await fetch('https://huggingface.co/api/whoami-v2', { headers: { Authorization: 'Bearer ' + ST.hf.token.trim() } }); if (!r.ok) throw hfE('', r.status); const j = await r.json(); m.className = 'msgp ok'; m.textContent = 'Tersambung sebagai ' + (j.name || 'akun Hugging Face') + '.'; } catch (err) { m.className = 'msgp bad'; m.textContent = err.status === 401 ? 'Token salah atau sudah tidak berlaku.' : 'Tidak bisa memeriksa token sekarang. Token tetap tersimpan.'; } return; }
+    const id = b.dataset.acancel || b.dataset.aretry || b.dataset.adel || b.dataset.asave || b.dataset.areuse; if (!id) return; const it = find(id); if (!it) return;
+    if (b.dataset.acancel) { const c = aiCtl.get(id); if (c) c.abort(); if (it.job) { O.relay('POST', '/jobs/' + it.job + '/cancel').catch(() => { }); O.relay('DELETE', '/jobs/' + it.job).catch(() => { }); } commit(() => { ST.aivids = ST.aivids.filter(x => x !== it); }); renderAIV(); return; }
+    if (b.dataset.adel) { const u = aivURL.get(id); if (u) URL.revokeObjectURL(u); aivURL.delete(id); O.idbSet('aiv:' + id, null); commit(() => { ST.aivids = ST.aivids.filter(x => x !== it); }); renderAIV(); return; }
+    if (b.dataset.asave) { const bl = await O.idbGet('aiv:' + id); if (bl) await O.saveBlob(bl, 'video-ai-' + id.slice(1, 7) + '.mp4'); return; }
+    if (b.dataset.aretry) { commit(() => { ST.aivids = ST.aivids.filter(x => x !== it); }); genAIV(it); return; }
+    if (b.dataset.areuse) { ST.aiPrompt = it.prompt; ST.aiDur = it.dur; ST.aiSteps = it.steps; save(); renderAIV(); vRoot.scrollTo && vRoot.scrollTo(0, 0); O.toast('Perintah dimuat. Ganti foto atau ubah perintah, lalu tekan Buat video.'); return; }
+  });
+  R.addEventListener('input', e => {
+    if (ST.vmode === 'tpl') return; const t = e.target;
+    if (t.id === 'aPrompt') { ST.aiPrompt = t.value; save(); }
+    if (t.id === 'aDur') { ST.aiDur = +t.value; $('#aDurL', R).textContent = (+t.value).toFixed(1) + ' detik'; save(); }
+    if (t.id === 'aTok') { ST.hf.token = t.value.trim(); save(); }
+  });
+  R.addEventListener('change', async e => {
+    if (ST.vmode === 'tpl') return; const t = e.target;
+    if (t.id === 'aEnh') { ST.aiEnh = t.checked; save(); }
+    if (t.id === 'aSpace') { ST.hf.space = t.value; save(); }
+    if (t.id === 'aImgF' && t.files[0]) { try { ST.aiImg = await fileToData(t.files[0], 1024); save(); renderAIV(); } catch (err) { O.toast('Foto tidak bisa dibaca.'); } t.value = ''; }
+  });
+}
+
 /* ---------- UI Studio Video ---------- */
 let vRoot = null, vTab = 'isi', vSel = 0, vPlay = null, vT = 0, vGen = false, vExp = null;
 const curVideo = () => ST.videos.find(v => v.id === ST.video) || null;
@@ -691,9 +848,10 @@ function vMusicPanel(V) {
 }
 function vTplPanel(V) { return `<p class="slab">Template video</p><div class="vtpl">${VTPL.map(t => { const th = themeOf(t.theme); return `<button type="button" class="vcard${V.tpl === t.id ? ' on' : ''}" data-vtpl="${t.id}" style="background:${th.bg};color:${th.ink}"><b style="font-family:'${th.hf}'">${t.n}</b><span>${t.ratio}, musik ${MUSIC.find(m => m[0] === t.music)[1].toLowerCase()}</span><i style="background:${th.acc}"></i></button>`; }).join('')}</div><p class="sfine">Template mengganti rasio, warna, font, musik, animasi, dan contoh adegan. Isi adeganmu akan diganti.</p><p class="slab">Warna dan font saja</p>${designPanel('tpl', V.theme)}`; }
 function renderVideo() {
+  if (ST.vmode !== 'tpl') { renderAIV(); return; }
   const V = ensureVideo(); vSel = clamp(vSel, 0, Math.max(0, V.scenes.length - 1)); loadFont(V.theme.hf); loadFont(V.theme.bf);
   const sc = V.scenes[vSel], all = total(V);
-  vRoot.innerHTML = `<div class="stu">
+  vRoot.innerHTML = `<div class="stu">${modeBar()}
   <div class="stbar"><select class="in sdeck" id="vSel" aria-label="Pilih video">${ST.videos.map(v => `<option value="${v.id}"${v.id === V.id ? ' selected' : ''}>${esc(v.title || 'Tanpa judul')}</option>`).join('')}<option value="__new">+ Video baru</option></select>
   <input class="in stitle" id="vTitle" value="${esc(V.title)}" aria-label="Judul video">
   <div class="sbtns"><button type="button" class="btn pri" id="vAI">${ico('spark')} Buat dengan AI</button><select class="in qsel" id="vQ" aria-label="Kualitas"><option value="720">720p</option><option value="1080">1080p</option></select><button type="button" class="btn" id="vExp">${ico('down')} Ekspor video</button><button type="button" class="ib" id="vUndo" aria-label="Urungkan" title="Urungkan">${ico('redo')}</button><button type="button" class="ib" id="vDelV" aria-label="Hapus video" title="Hapus video">${ico('trash')}</button></div></div>
@@ -739,6 +897,8 @@ function bindVideo() {
   const jump = k => { vSel = k; vT = sceneStart(V(), k) + Math.min(1.6, (+V().scenes[k].dur || 3) - .1); };
   bindDesign(R, () => V().theme, fn => upd(() => fn(V().theme)));
   R.addEventListener('click', async e => {
+    const mb = e.target.closest('[data-vmode]'); if (mb) { stopPlay(); ST.vmode = mb.dataset.vmode; save(); renderVideo(); return; }
+    if (ST.vmode !== 'tpl') return;
     const b = e.target.closest('button,[data-vk]'); if (!b) return; const v = V();
     if (b.dataset.vk != null) { stopPlay(); jump(+b.dataset.vk); renderVideo(); return; }
     if (b.dataset.vtab) { vTab = b.dataset.vtab; renderVideo(); return; }
@@ -767,6 +927,7 @@ function bindVideo() {
     }
   });
   R.addEventListener('change', async e => {
+    if (ST.vmode !== 'tpl') return;
     const t = e.target, v = V();
     if (t.id === 'vSel') { stopPlay(); if (t.value === '__new') { commit(() => { const nv = videoFromTpl(VTPL[0]); nv.title = 'Video baru'; ST.videos.unshift(nv); ST.video = nv.id; }); } else ST.video = t.value; vSel = 0; vT = 0; save(); renderVideo(); return; }
     if (t.id === 'vQ') { ST.vq = t.value; save(); return; }
@@ -777,6 +938,7 @@ function bindVideo() {
     if (t.dataset.vf === 'layout') return upd(() => { sc().layout = t.value; });
   });
   R.addEventListener('input', e => {
+    if (ST.vmode !== 'tpl') return;
     const t = e.target, v = V();
     if (t.id === 'vTitle') { v.title = t.value; v.sample = false; save(); const o = $(`#vSel option[value="${v.id}"]`, R); if (o) o.textContent = t.value || 'Tanpa judul'; return; }
     if (t.id === 'vScrub') { stopPlay(); vT = +t.value; drawPreview(); return; }
@@ -895,6 +1057,28 @@ const CSS = `${SLIDE_CSS}
 .vcard.on{border-color:var(--acc)}
 .vcard b{display:block;font-size:16px}.vcard span{font-size:12px;opacity:.8}
 .vcard i{position:absolute;right:10px;top:10px;width:12px;height:12px;border-radius:50%}
+.modesw{display:flex;gap:4px;background:var(--bub);border-radius:12px;padding:4px;align-self:flex-start;max-width:100%}
+.modesw button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:0;border-radius:9px;background:transparent;font-size:14px;white-space:nowrap}
+.modesw button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12);font-weight:600}
+.modesw .i{width:16px;height:16px}
+.aiv{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:18px;overflow:hidden}
+.aivl,.aivr{overflow-y:auto;min-height:0;padding:2px 4px 16px 2px}
+.drop{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;min-height:200px;border:2px dashed var(--line);border-radius:16px;background:var(--card);color:var(--mute);padding:16px;margin:0 0 14px;position:relative;overflow:hidden}
+.drop .i{width:34px;height:34px}.drop b{color:var(--ink);font-size:16px}.drop span{font-size:13.5px;text-align:center}
+.drop.has{padding:0;border-style:solid;min-height:0}
+.drop img{display:block;width:100%;max-height:340px;object-fit:contain;background:#000}
+.drop .chg{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.6);color:#fff;border-radius:999px;padding:4px 12px;font-size:13px}
+.hfacc{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-top:12px}
+.hfacc summary{cursor:pointer;font-weight:600;font-size:14.5px}
+.hfacc a{color:var(--acc)}
+.aicard{display:flex;gap:12px;border:1px solid var(--line);border-radius:14px;background:var(--card);padding:12px;margin:0 0 12px}
+.aithumb{width:96px;height:96px;object-fit:cover;border-radius:10px;flex:none}
+.aibody{flex:1;min-width:0}
+.aip{margin:0 0 2px;font-size:15px}
+.aivid{display:block;width:100%;max-height:420px;border-radius:10px;background:#000;margin:6px 0 10px}
+.aistat{display:flex;align-items:center;gap:10px;color:var(--mute);font-size:14.5px;margin:6px 0}
+#aDur{width:100%}
+@media(max-width:1000px){.aiv{grid-template-columns:minmax(0,1fr);grid-auto-rows:max-content;align-content:start;overflow-y:auto}.aivl,.aivr{overflow:visible;min-height:max-content}}
 .obpres{position:fixed;inset:0;z-index:100;background:#000;overflow:hidden}
 .obpres .ps{position:absolute;left:0;top:0;width:1280px;height:720px;transform-origin:0 0}
 .obpres .slot{position:absolute;inset:0}
@@ -914,7 +1098,7 @@ window.Studio = {
     el.innerHTML = '<div class="studio-host"></div>';
     const host = el.firstChild; host.style.height = '100%';
     if (kind === 'slides') { sRoot = host; vRoot = null; renderSlides(); bindSlides(); }
-    else { vRoot = host; sRoot = null; renderVideo(); bindVideo(); }
+    else { vRoot = host; sRoot = null; renderVideo(); bindVideo(); bindAIV(); }
   },
   close() { stopPlay(); if (vExp) vExp.cancel = true; },
   _test: { geo, buildPptx, buildHTML, recordVideo, videoFromTpl, VTPL, THEMES, palette, contrast, get ST() { return ST; } }
