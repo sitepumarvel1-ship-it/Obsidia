@@ -293,6 +293,16 @@ textarea.in{min-height:96px;resize:vertical}
 #studio{flex:1;min-height:0;overflow:hidden}
 .main.studon .body{display:none}
 .mrow select{flex:1}
+
+.att .an{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}
+.att .an b,.att .an small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.att .an b{font-weight:500}
+.att .an small{color:var(--mute);font-size:12px}
+.att.ld .fi{animation:attp 1.1s ease-in-out infinite}
+@keyframes attp{50%{opacity:.45}}
+.att img{flex:none}
+.uatt small{color:var(--mute);opacity:.8;margin-left:2px}
+.uatt small::before{content:'· '}
 </style>
 </head>
 <body>
@@ -358,7 +368,7 @@ textarea.in{min-height:96px;resize:vertical}
 <textarea id="ta" rows="1" placeholder="Tanyakan apa saja ke Obsidia" aria-label="Pesan"></textarea>
 <div class="row">
 <button class="rb ico" id="attach" type="button" aria-label="Lampirkan berkas atau gambar"><span data-i="plus"></span></button>
-<input type="file" id="file" multiple hidden accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,.csv,.json,.html,.css,.js,.ts,.py,.java,.c,.cpp,.go,.rs,.php,.sql,.xml,.yaml,.yml,.log,text/*">
+<input type="file" id="file" multiple hidden accept="image/*,video/*,.pdf,application/pdf,.docx,.pptx,.xlsx,.txt,.md,.csv,.json,.html,.css,.js,.ts,.py,.java,.c,.cpp,.go,.rs,.php,.sql,.xml,.yaml,.yml,.log,text/*">
 <div class="pw">
 <button class="rb" id="styBtn" type="button" aria-haspopup="true" aria-expanded="false"><span data-i="sliders"></span><span class="lbl" id="styName">Normal</span></button>
 <div class="pop l" id="styPop" role="menu"></div>
@@ -418,6 +428,7 @@ textarea.in{min-height:96px;resize:vertical}
 <div class="fld"><label for="sInstr">Preferensi pribadi</label><textarea class="in" id="sInstr" maxlength="3000" placeholder="Contoh: Saya mahasiswa teknik. Jawab dengan bahasa santai dan beri contoh nyata."></textarea><small>Dipakai di setiap chat.</small></div>
 <div class="fld"><label for="sStyle">Gaya jawaban bawaan</label><select class="in" id="sStyle"></select></div>
 <div class="fld"><label for="sCtx">Panjang riwayat yang dikirim</label><select class="in" id="sCtx"><option value="12000">Pendek (hemat kuota gratis)</option><option value="30000">Sedang</option><option value="90000">Panjang (butuh model berkonteks besar)</option></select><small>Paket gratis sering membatasi jumlah token per menit. Pilih Pendek kalau sering kena batas.</small></div>
+<div class="fld"><label for="sDoc">Batas isi dokumen yang dikirim</label><select class="in" id="sDoc"><option value="30000">Kecil, sekitar 15 halaman (cocok untuk Groq)</option><option value="100000">Sedang, sekitar 50 halaman</option><option value="400000">Besar, sekitar 200 halaman (pakai Gemini)</option></select><small>Berlaku untuk PDF, Word, PowerPoint, dan Excel yang kamu lampirkan di chat. Dokumen tetap diingat sepanjang chat, jadi kamu bisa terus bertanya tanpa melampirkan ulang. Penyedia yang menolak dokumen panjang otomatis dilewati.</small></div>
 <div class="fld"><label for="sVoice">Suara baca</label><select class="in" id="sVoice"><option value="">Otomatis</option></select></div>
 <div class="fld"><label for="sTheme">Tampilan</label><select class="in" id="sTheme"><option value="">Ikuti perangkat</option><option value="light">Terang</option><option value="dark">Gelap</option></select></div>
 <div class="btns"><button class="btn pri" id="sSave" type="button">Simpan</button></div>
@@ -447,7 +458,7 @@ textarea.in{min-height:96px;resize:vertical}
 <h2 id="projH">Proyek<button class="ib" type="button" data-close aria-label="Tutup"><span data-i="x"></span></button></h2>
 <div class="fld"><label for="pN">Nama proyek</label><input class="in" id="pN" type="text" maxlength="60" placeholder="Contoh: Skripsi bab 3"></div>
 <div class="fld"><label for="pI">Instruksi proyek</label><textarea class="in" id="pI" maxlength="4000" placeholder="Apa yang harus selalu diperhatikan Obsidia di proyek ini?"></textarea></div>
-<div class="fld"><label for="pK">Pengetahuan proyek</label><textarea class="in" id="pK" style="min-height:140px" placeholder="Tempel teks referensi, catatan, atau isi dokumen di sini"></textarea><small>Atau tambahkan berkas teks: <button class="btn" id="pKf" type="button" style="height:34px">Pilih berkas</button></small><input type="file" id="pKfile" multiple hidden accept=".txt,.md,.csv,.json,.html,.js,.py,.xml,.yaml,.yml,text/*"></div>
+<div class="fld"><label for="pK">Pengetahuan proyek</label><textarea class="in" id="pK" style="min-height:140px" placeholder="Tempel teks referensi, catatan, atau isi dokumen di sini"></textarea><small>Atau tambahkan PDF, Word, PowerPoint, Excel, atau berkas teks: <button class="btn" id="pKf" type="button" style="height:34px">Pilih berkas</button></small><input type="file" id="pKfile" multiple hidden accept=".pdf,.docx,.pptx,.xlsx,.txt,.md,.csv,.json,.html,.js,.py,.xml,.yaml,.yml,text/*"></div>
 <div class="btns"><button class="btn dan" id="pDel" type="button">Hapus proyek</button><span class="sp"></span><button class="btn pri" id="pSave" type="button">Simpan</button></div>
 </div>
 </div>
@@ -552,7 +563,8 @@ if(pins.length)h+='<p class="lab">Berbintang</p>'+pins.map(itemHTML).join('');
 h+='<p class="lab">Terbaru</p>'+(rest.length?rest.map(itemHTML).join(''):`<p class="none">${q?'Tidak ada chat yang cocok.':'Belum ada chat.'}</p>`);
 $('#nav').innerHTML=h;
 }
-function attLine(a){return `<span>${ico(a.kind==='image'?'img':'file')}${esc(a.name)}</span>`}
+const ftIco=t=>({video:'film',pptx:'slides',xlsx:'list'})[t]||'file';
+function attLine(a){return `<span>${ico(a.kind==='image'?'img':ftIco(a.ftype))}${esc(a.name)}${a.info?`<small>${esc(a.info)}</small>`:''}</span>`}
 function uattHTML(m){const all=m.att||[],im=all.filter(a=>a.kind==='image'&&a.data),ot=all.filter(a=>!im.includes(a));return (im.length?`<div class="uimg">${im.map(a=>`<img src="${esc(a.data)}" alt="${esc(a.name)}" loading="lazy">`).join('')}</div>`:'')+(ot.length?`<div class="uatt">${ot.map(attLine).join('')}</div>`:'')}
 function thinkHTML(m){if(!m.think)return '';return `<details class="thk2"${m.pending?' open':''}><summary>${ico('spark')}${m.pending?'Berpikir…':'Proses berpikir'+(m.secs>0?', '+m.secs+' dtk':'')}</summary><div class="thx">${esc(m.think)}</div></details>`}
 function msgHTML(m,i,last){
@@ -606,7 +618,7 @@ $('#styPop').innerHTML=Object.entries(STY).map(([k,v])=>`<button class="opt${k==
 }
 function renderAtts(){
 const a=$('#atts');a.hidden=!pend.length;
-a.innerHTML=pend.map((x,i)=>`<div class="att">${x.kind==='image'?`<img src="${esc(x.data)}" alt="">`:`<span class="fi">${ico('file')}</span>`}<span>${esc(x.name)}</span><button type="button" data-rm="${i}" aria-label="Hapus lampiran">${ico('x')}</button></div>`).join('');
+a.innerHTML=pend.map((x,i)=>`<div class="att${x.loading?' ld':''}">${x.kind==='image'?`<img src="${esc(x.data)}" alt="">`:x.images&&x.images[0]&&x.ftype==='video'?`<img src="${esc(x.images[0])}" alt="">`:`<span class="fi">${ico(ftIco(x.ftype))}</span>`}<span class="an"><b>${esc(x.name)}</b>${x.kind!=='image'?`<small>${x.loading?'Membaca…':esc([FT[x.ftype]||'Berkas',x.info].filter(Boolean).join(' · '))}</small>`:''}</span><button type="button" data-rm="${i}" aria-label="Hapus lampiran">${ico('x')}</button></div>`).join('');
 sizeTa();
 }
 function applySettings(){greet();const n=st.set.name;$('#meName').textContent=n||'Pengguna';$('#avt').textContent=(n||'O').trim().charAt(0).toUpperCase();if(st.set.theme)document.documentElement.dataset.theme=st.set.theme;else delete document.documentElement.dataset.theme;const r=PROVIDERS.filter(isReady).length;$('#sync').textContent=(r?r+' penyedia AI siap':'Belum ada penyedia AI')+(relayOn()?', latar belakang aktif':'')}
@@ -627,25 +639,38 @@ if(sty.p)r+='\nGaya jawaban: '+sty.p;
 if(s.name)r+='\nNama panggilan pengguna: '+s.name;
 if(s.instr)r+='\nPreferensi pengguna:\n'+s.instr;
 if(s.useMem&&st.mem.length)r+='\nHal yang perlu diingat tentang pengguna (pakai hanya bila relevan):\n'+st.mem.map(x=>'- '+x.text).join('\n');
-if(pr){r+='\nProyek aktif: '+pr.name;if(pr.instr)r+='\nInstruksi proyek:\n'+pr.instr;if(pr.know)r+='\nPengetahuan proyek:\n"""\n'+pr.know.slice(0,Math.max(4000,st.set.ctx*2))+'\n"""'}
+if(pr){r+='\nProyek aktif: '+pr.name;if(pr.instr)r+='\nInstruksi proyek:\n'+pr.instr;if(pr.know)r+='\nPengetahuan proyek:\n"""\n'+pr.know.slice(0,Math.max(st.set.ctx*2,Math.round((st.set.docMax||100000)/2)))+'\n"""'}
 r+='\nTanggal hari ini: '+new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+'.';
 return r;
 }
+const isDoc=a=>a&&(a.kind==='text'||a.kind==='doc');
+const FT={pdf:'PDF',docx:'Word',pptx:'PowerPoint',xlsx:'Excel',video:'Video',text:'Teks'};
 function userText(m){
-let t=m.content||'';
-(m.att||[]).forEach(a=>{if(a.kind==='text')t+=`\n\n[Lampiran berkas: ${a.name}]\n\`\`\`\n${a.text}\n\`\`\``});
+let t=m.content||'';const ds=(m.att||[]).filter(isDoc);
+if(ds.length)t+='\n\n'+ds.map(a=>`[Lampiran: ${a.name}${a.info?' ('+a.info+')':''}]`).join('\n');
 return t.trim()||'(lihat gambar terlampir)';
 }
+function docBlock(a,lim){let x=a.text||'',cut=false;if(x.length>lim){x=x.slice(0,lim);cut=true}
+return `<dokumen nama="${a.name.replace(/"/g,"'")}" jenis="${FT[a.ftype]||'Berkas'}"${a.info?` keterangan="${a.info}"`:''}>\n${x}${cut?'\n…(sisa dokumen dipotong karena melebihi batas isi dokumen di Pengaturan > Umum)':''}\n</dokumen>`}
 function buildTurns(c){
 const hist=c.msgs.slice(0,-1).filter(x=>x.role==='user'||(x.content&&x.content.trim()));
 const imgs=[];hist.forEach(x=>{if(x.role==='user')(x.att||[]).forEach(a=>{if(a.kind==='image'&&a.data)imgs.push(a)})});
-const keep=new Set(imgs.slice(-4));
+const docs=[];[...hist].reverse().forEach(x=>{if(x.role==='user')(x.att||[]).forEach(a=>{if(isDoc(a)&&!docs.includes(a))docs.push(a)})});
+const dimgs=[];docs.forEach(a=>(a.images||[]).forEach(d=>dimgs.push(d)));
+const MAXI=5,lastMsg=hist[hist.length-1],ownLast=lastMsg?(lastMsg.att||[]).filter(a=>a.kind==='image'&&a.data):[];
+const useD=dimgs.slice(0,Math.max(0,MAXI-ownLast.length));
+const keep=new Set(imgs.slice(-Math.max(ownLast.length,MAXI-useD.length)));
 let turns=hist.map(x=>({role:x.role,text:x.role==='user'?userText(x):x.content,images:x.role==='user'?(x.att||[]).filter(a=>keep.has(a)).map(a=>a.data):[]}));
 let total=turns.reduce((n,x)=>n+x.text.length,0);
 while(total>st.set.ctx&&turns.length>1){total-=turns.shift().text.length}
 while(turns.length&&turns[0].role!=='user')turns.shift();
 const lastU=turns[turns.length-1];
 if(lastU&&lastU.text.length>st.set.ctx*1.5)lastU.text=lastU.text.slice(0,Math.floor(st.set.ctx*1.5))+'\n…(dipotong karena terlalu panjang)';
+if(lastU&&docs.length){let left=st.set.docMax||100000;const parts=[];
+for(const a of docs){if(left<500)break;const b=docBlock(a,left);left-=(a.text||'').length;parts.push(b)}
+const skipped=docs.length-parts.length;
+lastU.text='Berikut isi berkas yang dilampirkan pengguna di percakapan ini (yang terbaru lebih dulu). Gunakan isinya untuk menjawab. Kutip nomor halaman atau slide bila relevan.\n\n'+parts.join('\n\n')+(skipped?`\n\n(${skipped} berkas lama tidak dikirim karena batas isi dokumen.)`:'')+'\n\n---\nPesan pengguna:\n'+lastU.text;
+lastU.images=[...useD,...lastU.images]}
 return turns;
 }
 
@@ -687,7 +712,15 @@ if(s===413)return 'Pesan terlalu panjang untuk model ini. Pilih riwayat Pendek, 
 if(s>=500)return p.n+' sedang bermasalah. Coba lagi atau pilih penyedia lain.';
 return p.n+' menolak permintaan: '+(e.message||'tanpa keterangan');
 }
-const retryable=e=>!e.status||e.status===429||e.status>=500;
+const retryable=e=>!e.status||e.status===429||e.status===413||e.status>=500||(e.status===400||e.status===404||e.status===422)&&/image|vision|multimodal|image_url|modalit/i.test(e.message||'');
+/* model yang bisa melihat gambar (foto, cuplikan video, PDF pindaian) */
+const VIS_RE=/gemini|gemma-3|gpt-4o|gpt-4\.1|gpt-5|o4-mini|llama-4|scout|maverick|pixtral|vision|[-_.]vl\b|vl-|mistral-(small|medium)|claude|grok-4|llava|minicpm-v|qwen2\.5vl|qwen3-vl/i;
+const VIS_DEF={groq:'meta-llama/llama-4-scout-17b-16e-instruct',sambanova:'Llama-4-Maverick-17B-128E-Instruct',github:'openai/gpt-4.1-mini',mistral:'mistral-small-latest',openrouter:'google/gemma-3-27b-it:free',cohere:'command-a-vision-07-2025'};
+function visionQueue(queue){const out=[],later=[];let note='';
+queue.forEach((q,i)=>{if(VIS_RE.test(q.model)){out.push(q);return}
+const alt=modelsOf(q.p).find(x=>VIS_RE.test(x))||VIS_DEF[q.p.id]||(q.p.id==='ollama'||q.p.id==='custom'?'':'');
+if(alt){out.push({p:q.p,model:alt});if(i===0)note=shortModel(q.model)+' tidak bisa melihat gambar, jadi dipakai '+shortModel(alt)+'.'}else later.push(q)});
+return {q:[...out,...later],note}}
 
 /* ---------- menjalankan ---------- */
 async function run(c){
@@ -696,6 +729,7 @@ const m={role:'assistant',content:'',think:'',pending:true,live:true};
 c.msgs.push(m);c.t=Date.now();save();renderNav();renderChat();toBottom();let ls=Date.now();const keep=()=>{if(Date.now()-ls>1500){ls=Date.now();save()}};
 const queue=[];if(isReady(p))queue.push({p,model});
 if(st.set.fallback||!queue.length)PROVIDERS.filter(x=>x.id!==p.id&&isReady(x)).forEach(x=>queue.push({p:x,model:modelsOf(x)[0]}));
+if(queue.length&&buildTurns(c).some(t=>t.images&&t.images.length)){const vq=visionQueue(queue);if(vq.note)m.note=vq.note;queue.splice(0,queue.length,...vq.q)}
 if(!queue.length){m.pending=false;m.err='Belum ada penyedia AI yang siap. Buka Pengaturan > Penyedia AI dan tempel API key gratis.';save();renderChat();return}
 m.t0=Date.now();
 if(relayOn()){const r=await runRelay(c,m,queue);if(r===true)return;if(!m.note)m.note='Server latar belakang tidak bisa dihubungi, jadi dijawab langsung.'}
@@ -761,11 +795,12 @@ async function send(){
 if(ctrl){ctrl.abort();return}
 const cc=cur(),jm=cc&&cc.msgs.find(x=>x.job);if(jm){relay('POST','/jobs/'+jm.job+'/cancel').catch(()=>{});finishJob(cc,jm,{state:'cancelled'});return}
 const text=$('#ta').value.trim();if(!text&&!pend.length)return;
+if(pend.some(a=>a.loading)){toast('Tunggu sebentar, berkas masih dibaca.');return}
 const mm=text.match(/^(?:tolong\s+)?ingat(?:lah)?(?:\s+bahwa)?\s+(.{3,300})$/i);
 if(mm&&st.set.useMem){const f=mm[1].trim();if(!st.mem.some(x=>x.text===f)){st.mem.push({id:uid6(),text:f,t:Date.now()});toast('Disimpan ke memori.')}}
 let c=cur();
 if(!c){const s=curSel();c={id:'c'+uid6(),t:Date.now(),title:(text||pend[0].name).replace(/\s+/g,' ').slice(0,48),msgs:[],proj:st.view&&st.view!=='all'?st.view:null,pv:s.p.id,model:s.model};st.convs.unshift(c);st.cur=c.id}
-c.msgs.push({role:'user',content:text,att:pend.map(a=>a.kind==='text'?{kind:'text',name:a.name,text:a.text}:{kind:'image',name:a.name,data:a.data})});
+c.msgs.push({role:'user',content:text,att:pend.map(a=>a.kind==='image'?{kind:'image',name:a.name,data:a.data}:{kind:'doc',ftype:a.ftype||'text',name:a.name,info:a.info||'',text:a.text||'',images:a.images||[]})});
 pend=[];renderAtts();$('#ta').value='';sizeTa();editing=-1;run(c);
 }
 
@@ -774,23 +809,128 @@ const readURL=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>r
 async function shrink(f){
 const url=await readURL(f);if(f.type==='image/gif')return url;
 const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=url});
-const k=Math.min(1,1280/Math.max(img.naturalWidth,img.naturalHeight));if(k===1&&f.size<600000)return url;
+const k=Math.min(1,1280/Math.max(img.naturalWidth,img.naturalHeight));if(k===1&&f.size<600000&&/^image\/(png|jpeg|webp)$/.test(f.type))return url;
 const cv=document.createElement('canvas');cv.width=Math.round(img.naturalWidth*k);cv.height=Math.round(img.naturalHeight*k);cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);return cv.toDataURL('image/jpeg',.85);
 }
+const fkind=f=>{const n=f.name||'',t=f.type||'';
+if(/^image\//.test(t)&&!/svg/.test(t)||/\.(heic|heif|jpe?g|png|webp|gif)$/i.test(n))return 'image';
+if(/^video\//.test(t)||/\.(mp4|mov|m4v|webm|3gp)$/i.test(n))return 'video';
+if(/pdf/.test(t)||/\.pdf$/i.test(n))return 'pdf';
+if(/\.docx$/i.test(n)||/wordprocessingml/.test(t))return 'docx';
+if(/\.pptx$/i.test(n)||/presentationml/.test(t))return 'pptx';
+if(/\.xlsx$/i.test(n)||/spreadsheetml/.test(t))return 'xlsx';
+if(/\.(doc|ppt|xls|pages|key|numbers)$/i.test(n))return 'old';
+if(/^text\//.test(t)||TXT.test(n)||/json|xml|javascript/.test(t))return 'text';
+return ''};
 async function addFiles(list){
 for(const f of list){
-if(/^image\/(png|jpeg|webp|gif)$/.test(f.type)){
-if(pend.filter(a=>a.kind==='image').length>=4){toast('Maksimal 4 gambar per pesan.');continue}
-if(f.size>20e6){toast('Gambar terlalu besar: '+f.name);continue}
-try{pend.push({kind:'image',name:f.name||'gambar.png',data:await shrink(f)})}catch(e){toast('Gambar tidak bisa dibaca: '+f.name)}
-}else if(/^text\//.test(f.type)||TXT.test(f.name)||/json|xml|javascript/.test(f.type)){
-if(f.size>800000){toast('Berkas terlalu besar: '+f.name);continue}
-let t=await f.text();if(t.length>60000){t=t.slice(0,60000)+'\n…(dipotong)';toast(f.name+' dipotong ke 60.000 karakter.')}
-pend.push({kind:'text',name:f.name,text:t});
-}else toast('Belum didukung: '+f.name+'. Gunakan gambar atau berkas teks.');
+const k=fkind(f);
+if(k==='image'){
+if(pend.filter(a=>a.kind==='image').length>=5){toast('Maksimal 5 gambar per pesan.');continue}
+if(f.size>25e6){toast('Gambar terlalu besar: '+f.name);continue}
+try{pend.push({kind:'image',name:f.name||'gambar.jpg',data:await shrink(f)})}catch(e){toast('Gambar tidak bisa dibaca: '+f.name)}
+renderAtts();continue}
+if(k==='old'){toast(f.name+': format lama belum didukung. Simpan ulang sebagai .docx, .pptx, .xlsx, atau PDF.');continue}
+if(!k){toast('Belum didukung: '+f.name+'. Gunakan PDF, Word, PowerPoint, Excel, foto, video, atau berkas teks.');continue}
+if(pend.filter(a=>a.kind!=='image').length>=5){toast('Maksimal 5 dokumen per pesan.');continue}
+const item={kind:'doc',ftype:k,name:f.name||'berkas',loading:true};pend.push(item);renderAtts();
+try{Object.assign(item,await readDoc(f,k));delete item.loading;
+if(!item.text.trim()&&!(item.images||[]).length)throw new Error('Tidak ada teks yang bisa dibaca dari berkas ini.');
+if(item.cut)toast(f.name+' sangat panjang, hanya bagian awalnya yang dibaca.')}
+catch(e){pend=pend.filter(x=>x!==item);toast((f.name||'Berkas')+': '+(e.message||'tidak bisa dibaca.'))}
+renderAtts()}
 }
-renderAtts();
+
+/* ---------- membaca dokumen (PDF, Word, PowerPoint, Excel, video) ---------- */
+const DOC_MAX=400000;
+let zipP=null,pdfP=null;
+const loadZip=()=>window.JSZip?Promise.resolve(window.JSZip):zipP||(zipP=new Promise((res,rej)=>{const s=document.createElement('script');s.src='pptxgen.bundle.js';s.onload=()=>window.JSZip?res(window.JSZip):rej(new Error('Pustaka dokumen tidak lengkap.'));s.onerror=()=>{zipP=null;rej(new Error('Pustaka dokumen gagal dimuat. Periksa internet lalu coba lagi.'))};document.head.appendChild(s)}));
+const loadPdf=()=>pdfP||(pdfP=import(new URL('pdf.min.mjs',location.href).href).then(m=>{m.GlobalWorkerOptions.workerSrc=new URL('pdf.worker.min.mjs',location.href).href;return m}).catch(()=>{pdfP=null;throw new Error('Pustaka PDF gagal dimuat. Periksa internet lalu coba lagi.')}));
+const xmlDoc=t=>new DOMParser().parseFromString(t,'application/xml');
+const tags=(n,t)=>[...n.getElementsByTagName(t)];
+const capT=t=>t.length>DOC_MAX?{text:t.slice(0,DOC_MAX),cut:true}:{text:t,cut:false};
+async function readDoc(f,k){
+if(k==='text'){if(f.size>3e6)throw new Error('berkas teks terlalu besar (maks 3 MB).');const t=await f.text();return {...capT(t),info:t.length.toLocaleString('id-ID')+' karakter'}}
+if(k==='pdf')return readPdf(f);
+if(k==='video')return readVideo(f);
+if(f.size>60e6)throw new Error('berkas terlalu besar (maks 60 MB).');
+const JSZip=await loadZip();let z;try{z=await JSZip.loadAsync(await f.arrayBuffer())}catch(e){throw new Error('berkas rusak atau terkunci kata sandi.')}
+return k==='docx'?readDocx(z):k==='pptx'?readPptx(z):readXlsx(z);
 }
+async function readPdf(f){
+if(f.size>100e6)throw new Error('PDF terlalu besar (maks 100 MB).');
+const pdfjs=await loadPdf();let doc,task;
+try{task=pdfjs.getDocument({data:new Uint8Array(await f.arrayBuffer()),isEvalSupported:false,useSystemFonts:true});doc=await task.promise}
+catch(e){throw new Error(e&&e.name==='PasswordException'?'PDF dikunci kata sandi. Buka kuncinya dulu.':'PDF rusak atau tidak bisa dibuka.')}
+const n=doc.numPages,out=[];let len=0,cut=false;
+for(let i=1;i<=n;i++){const pg=await doc.getPage(i);const tc=await pg.getTextContent();let t='';
+for(const it of tc.items){if(it.str!==undefined){t+=it.str;if(it.hasEOL)t+='\n'}}
+t=t.replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+const blk=`--- Halaman ${i} ---\n${t||'(tidak ada teks)'}`;len+=blk.length;out.push(blk);pg.cleanup();
+if(len>DOC_MAX){cut=true;out.push(`(berhenti di halaman ${i} dari ${n} karena dokumen terlalu panjang)`);break}}
+const chars=out.join('').replace(/--- Halaman \d+ ---|\(tidak ada teks\)|\s/g,'').length;
+const images=[];
+if(chars<Math.min(n,20)*60){for(let i=1;i<=Math.min(n,5);i++){const pg=await doc.getPage(i);const v0=pg.getViewport({scale:1});const sc=Math.min(2,1100/Math.max(v0.width,v0.height));const vp=pg.getViewport({scale:sc});const cv=document.createElement('canvas');cv.width=Math.round(vp.width);cv.height=Math.round(vp.height);const cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);await pg.render({canvasContext:cx,canvas:cv,viewport:vp}).promise;images.push(cv.toDataURL('image/jpeg',.8));pg.cleanup()}}
+try{task.destroy()}catch(e){}
+let text=out.join('\n\n');
+if(images.length)text=`PDF ini tampaknya hasil pindaian (gambar), jadi teksnya tidak terbaca. ${images.length} halaman pertama dilampirkan sebagai gambar.`+(chars?'\n\n'+text:'');
+return {text,cut,images,info:n+' halaman'+(images.length?', pindaian':'')};
+}
+function docxText(xml){const d=xmlDoc(xml),body=d.getElementsByTagName('w:body')[0];if(!body)return '';const out=[];
+const ptext=p=>{let t='';for(const n of p.getElementsByTagName('*')){const g=n.tagName;if(g==='w:t')t+=n.textContent;else if(g==='w:tab')t+='\t';else if(g==='w:br'||g==='w:cr')t+='\n'}return t};
+const para=p=>{const t=ptext(p);if(!t.trim())return;const ps=p.getElementsByTagName('w:pStyle')[0],sv=ps?ps.getAttribute('w:val')||'':'';const h=sv.match(/^(?:heading|judul|kop)\s*(\d)/i);
+if(/^(title|judul)$/i.test(sv))out.push('# '+t);else if(h)out.push('#'.repeat(Math.min(6,+h[1]+1))+' '+t);else if(p.getElementsByTagName('w:numPr').length||/list/i.test(sv))out.push('- '+t);else out.push(t)};
+const table=tb=>{const rows=[...tb.children].filter(r=>r.tagName==='w:tr').map(r=>[...r.children].filter(c=>c.tagName==='w:tc').map(c=>tags(c,'w:p').map(ptext).join(' ').replace(/\|/g,'/').replace(/\s+/g,' ').trim()));if(rows.length)out.push(rows.map(r=>'| '+r.join(' | ')+' |').join('\n'))};
+const walk=n=>{for(const c of n.children){const g=c.tagName;if(g==='w:p')para(c);else if(g==='w:tbl')table(c);else if(g==='w:sdt'||g==='w:sdtContent'||g==='w:customXml')walk(c)}};
+walk(body);return out.join('\n\n')}
+async function readDocx(z){const m=z.file('word/document.xml');if(!m)throw new Error('bukan dokumen Word yang valid.');
+let t=docxText(await m.async('string'));
+for(const nm of ['word/footnotes.xml','word/endnotes.xml']){const x=z.file(nm);if(x){const ft=docxText((await x.async('string')).replace(/w:footnotes|w:endnotes/g,'w:body'));if(ft.trim())t+='\n\n[Catatan kaki]\n'+ft}}
+const words=(t.match(/\S+/g)||[]).length;return {...capT(t),info:words.toLocaleString('id-ID')+' kata'}}
+const relMap=async(z,p)=>{const f=z.file(p);const m={};if(!f)return m;for(const r of tags(xmlDoc(await f.async('string')),'Relationship'))m[r.getAttribute('Id')]={t:r.getAttribute('Target'),type:r.getAttribute('Type')||''};return m};
+const resolveP=(base,t)=>{if(t.startsWith('/'))return t.slice(1);const parts=base.split('/');parts.pop();for(const s of t.split('/')){if(s==='..')parts.pop();else if(s&&s!=='.')parts.push(s)}return parts.join('/')};
+function slideText(xml){const d=xmlDoc(xml),lines=[];let title='';
+const tree=d.getElementsByTagName('p:spTree')[0];if(!tree)return {title,body:''};
+for(const n of tree.getElementsByTagName('*')){
+if(n.tagName==='p:sp'){const ph=n.getElementsByTagName('p:ph')[0],pt=ph?ph.getAttribute('type')||'':'';const ps=tags(n,'a:p').map(p=>tags(p,'a:t').map(x=>x.textContent).join('')).filter(x=>x.trim());if(!ps.length)continue;
+if(!title&&/title/i.test(pt))title=ps.join(' ');else ps.forEach(x=>lines.push('- '+x))}
+else if(n.tagName==='a:tbl'){const rows=tags(n,'a:tr').map(r=>tags(r,'a:tc').map(c=>tags(c,'a:t').map(x=>x.textContent).join(' ').replace(/\|/g,'/').trim()));lines.push(rows.map(r=>'| '+r.join(' | ')+' |').join('\n'))}}
+return {title,body:lines.join('\n')}}
+async function readPptx(z){
+const pres=z.file('ppt/presentation.xml');if(!pres)throw new Error('bukan presentasi PowerPoint yang valid.');
+const rels=await relMap(z,'ppt/_rels/presentation.xml.rels');
+let order=tags(xmlDoc(await pres.async('string')),'p:sldId').map(s=>rels[s.getAttribute('r:id')]).filter(Boolean).map(r=>resolveP('ppt/presentation.xml',r.t));
+if(!order.length)order=Object.keys(z.files).filter(n=>/^ppt\/slides\/slide\d+\.xml$/.test(n)).sort((a,b)=>+a.match(/\d+/)[0]-+b.match(/\d+/)[0]);
+const out=[];
+for(let i=0;i<order.length;i++){const f=z.file(order[i]);if(!f)continue;const st2=slideText(await f.async('string'));
+let notes='';const sr=await relMap(z,order[i].replace(/slides\/(slide\d+\.xml)$/,'slides/_rels/$1.rels'));
+const nr=Object.values(sr).find(r=>/notesSlide$/.test(r.type));if(nr){const nf=z.file(resolveP(order[i],nr.t));if(nf){const nd=xmlDoc(await nf.async('string'));notes=tags(nd,'p:sp').filter(sp=>{const ph=sp.getElementsByTagName('p:ph')[0];return ph&&ph.getAttribute('type')==='body'}).map(sp=>tags(sp,'a:p').map(p=>tags(p,'a:t').map(x=>x.textContent).join('')).filter(x=>x.trim()).join('\n')).join('\n').trim()}}
+out.push(`--- Slide ${i+1}${st2.title?': '+st2.title:''} ---\n${st2.body||'(tanpa teks)'}${notes?'\nCatatan pembicara: '+notes:''}`)}
+return {...capT(out.join('\n\n')),info:order.length+' slide'}}
+async function readXlsx(z){
+const wb=z.file('xl/workbook.xml');if(!wb)throw new Error('bukan berkas Excel yang valid.');
+const ssF=z.file('xl/sharedStrings.xml');const ss=ssF?tags(xmlDoc(await ssF.async('string')),'si').map(si=>tags(si,'t').map(t=>t.textContent).join('')):[];
+const rels=await relMap(z,'xl/_rels/workbook.xml.rels');const sheets=tags(xmlDoc(await wb.async('string')),'sheet');const out=[];
+const colN=r=>{let n=0;for(const ch of r.replace(/\d+/g,''))n=n*26+ch.charCodeAt(0)-64;return n-1};
+for(const sh of sheets){const r=rels[sh.getAttribute('r:id')];if(!r)continue;const f=z.file(resolveP('xl/workbook.xml',r.t));if(!f)continue;
+const rows=tags(xmlDoc(await f.async('string')),'row');const lines=[];
+for(const row of rows.slice(0,3000)){const cells=[];for(const c of tags(row,'c')){const t=c.getAttribute('t'),v=c.getElementsByTagName('v')[0];let val=t==='inlineStr'?tags(c,'t').map(x=>x.textContent).join(''):v?v.textContent:'';if(t==='s')val=ss[+val]||'';else if(t==='b')val=val==='1'?'TRUE':'FALSE';const ix=colN(c.getAttribute('r')||'A');cells[ix>=0?ix:cells.length]=val.replace(/\t|\n/g,' ')}
+if(cells.some(x=>x))lines.push(Array.from(cells,x=>x||'').join('\t'))}
+out.push(`--- Sheet: ${sh.getAttribute('name')} (${rows.length} baris${rows.length>3000?', hanya 3000 pertama':''}) ---\n${lines.join('\n')}`)}
+return {...capT(out.join('\n\n')),info:sheets.length+' sheet'}}
+const fmtDur=s=>{s=Math.round(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function readVideo(f){return new Promise((res,rej)=>{
+const url=URL.createObjectURL(f),v=document.createElement('video');v.muted=true;v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';v.style.cssText='position:fixed;left:-9999px;width:2px;height:2px';document.body.appendChild(v);
+const done=(err,val)=>{clearTimeout(to);v.remove();URL.revokeObjectURL(url);err?rej(err):res(val)};
+const to=setTimeout(()=>done(new Error('video terlalu lama dibaca atau formatnya tidak didukung.')),60000);
+v.onerror=()=>done(new Error('format video tidak didukung browser ini.'));
+v.onloadedmetadata=async()=>{try{
+const dur=isFinite(v.duration)?v.duration:0,N=dur<3?1:5,W=v.videoWidth,H=v.videoHeight,k=Math.min(1,768/Math.max(W,H)||1);
+const cv=document.createElement('canvas');cv.width=Math.round(W*k)||320;cv.height=Math.round(H*k)||180;const cx=cv.getContext('2d');const imgs=[],ts=[];
+for(let i=0;i<N;i++){const t=N===1?Math.min(dur/2,.5):dur*(i+.5)/N;await new Promise((ok,no)=>{const tt=setTimeout(ok,8000);v.onseeked=()=>{clearTimeout(tt);ok()};v.currentTime=t});
+cx.drawImage(v,0,0,cv.width,cv.height);imgs.push(cv.toDataURL('image/jpeg',.72));ts.push(fmtDur(t))}
+done(null,{images:imgs,info:fmtDur(dur)+(W?', '+W+'×'+H:''),text:`Video berdurasi ${fmtDur(dur)}${W?`, resolusi ${W}×${H}`:''}. Terlampir ${imgs.length} cuplikan gambar dari video ini, diambil pada ${ts.join(', ')}. Suara dan ucapan di video tidak ikut terbaca, jadi jawab hanya dari yang terlihat.`})}catch(e){done(new Error('video tidak bisa dibaca.'))}};
+v.src=url;v.load()})}
 
 /* ---------- artifact ---------- */
 function openArt(code,lang){art={code,lang};$('#artT').textContent=lang==='svg'?'Gambar SVG':(code.match(/<title>([^<]{1,60})<\/title>/i)||[])[1]||'Halaman HTML';$('#app').classList.add('arton');showTab('view')}
@@ -838,7 +978,7 @@ return h;
 function renderPv(){$('#pvList').innerHTML=PROVIDERS.map(pvCard).join('');$('#sFall').checked=st.set.fallback}
 function openSet(tab){
 $('#sName').value=st.set.name;$('#sInstr').value=st.set.instr;$('#sStyle').innerHTML=Object.entries(STY).map(([k,v])=>`<option value="${k}"${k===st.set.style?' selected':''}>${v.n}: ${v.d}</option>`).join('');
-$('#sCtx').value=String(st.set.ctx);$('#sTheme').value=st.set.theme||'';
+$('#sCtx').value=String(st.set.ctx);$('#sDoc').value=String(st.set.docMax||100000);$('#sTheme').value=st.set.theme||'';
 $('#sVoice').innerHTML='<option value="">Otomatis</option>'+voices().map(v=>`<option value="${esc(v.name)}"${v.name===st.set.voice?' selected':''}>${esc(v.name)}</option>`).join('');
 $('#mUse').checked=st.set.useMem;$('#rUrl').value=st.relay.url||'';$('#rPw').value=st.relay.pw||'';$('#rOn').checked=!!st.relay.on;$('#rMsg').textContent='';renderMem();renderPv();$('#dConfirm').hidden=true;
 setTab(tab||(PROVIDERS.some(isReady)?'umum':'prov'));$('#setM').classList.add('on');closeSide();
@@ -965,7 +1105,7 @@ if(b.dataset.test!==undefined){const r=await testPv(p);msg.className='msgp ok';m
 else{const ids=await loadModels(p);if(!ids.length)throw mkErr('Tidak ada model chat yang ditemukan.',404);pcfg(p.id).models=ids;save();renderModel();msg.className='msgp ok';msg.textContent=ids.length+' model dimuat. Pilih dari tombol model di kolom chat.'}
 }catch(err){msg.className='msgp bad';msg.textContent=errMsg(err,p)}
 b.disabled=false});
-$('#sSave').addEventListener('click',()=>{st.set.name=$('#sName').value.trim();st.set.instr=$('#sInstr').value.trim();st.set.style=$('#sStyle').value;st.set.voice=$('#sVoice').value;st.set.ctx=+$('#sCtx').value||12000;st.set.theme=$('#sTheme').value;save();closeMods();toast('Pengaturan disimpan.')});
+$('#sSave').addEventListener('click',()=>{st.set.name=$('#sName').value.trim();st.set.instr=$('#sInstr').value.trim();st.set.style=$('#sStyle').value;st.set.voice=$('#sVoice').value;st.set.ctx=+$('#sCtx').value||12000;st.set.docMax=+$('#sDoc').value||100000;st.set.theme=$('#sTheme').value;save();closeMods();toast('Pengaturan disimpan.')});
 $('#mUse').addEventListener('change',e=>{st.set.useMem=e.target.checked;save()});
 $('#mAdd').addEventListener('click',()=>{const v=$('#mNew').value.trim();if(!v)return;st.mem.push({id:uid6(),text:v.slice(0,300),t:Date.now()});$('#mNew').value='';save();renderMem()});
 $('#mNew').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();$('#mAdd').click()}});
@@ -980,7 +1120,7 @@ save();renderAll();closeMods();toast('Cadangan dipulihkan: '+d.convs.length+' ch
 $('#dDel').addEventListener('click',()=>{$('#dConfirm').hidden=false});
 $('#dYes').addEventListener('click',()=>{if(ctrl)return;st.convs=[];st.cur=null;save();closeMods();toast('Semua chat dihapus.')});
 $('#pKf').addEventListener('click',()=>$('#pKfile').click());
-$('#pKfile').addEventListener('change',async e=>{for(const f of e.target.files){if(f.size>1500000){toast('Terlalu besar: '+f.name);continue}const t=await f.text();$('#pK').value+=($('#pK').value?'\n\n':'')+'=== '+f.name+' ===\n'+t}e.target.value=''});
+$('#pKfile').addEventListener('change',async e=>{const fs=[...e.target.files];e.target.value='';for(const f of fs){const k=fkind(f);if(!['text','pdf','docx','pptx','xlsx'].includes(k)){toast('Pengetahuan proyek hanya menerima dokumen dan teks: '+f.name);continue}try{toast('Membaca '+f.name+'…');const r=await readDoc(f,k);if(!r.text.trim()||(r.images||[]).length)throw new Error('tidak ada teks yang bisa dibaca.');$('#pK').value+=($('#pK').value?'\n\n':'')+'=== '+f.name+' ===\n'+r.text}catch(err){toast(f.name+': '+(err.message||'tidak bisa dibaca.'))}}});
 $('#pSave').addEventListener('click',()=>{const n=$('#pN').value.trim();if(!n){$('#pN').focus();return}
 if(projEdit){projEdit.name=n;projEdit.instr=$('#pI').value.trim();projEdit.know=$('#pK').value}
 else{const p={id:'p'+uid6(),name:n,instr:$('#pI').value.trim(),know:$('#pK').value};st.projs.push(p);st.cur=null;st.view=p.id}

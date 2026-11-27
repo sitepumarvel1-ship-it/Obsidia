@@ -279,7 +279,7 @@ function present(deck, start = 0) {
 
 /* ---------- ekspor PPTX ---------- */
 let pptxLib = null;
-function loadPptx() { return pptxLib || (pptxLib = new Promise((res, rej) => { const s = document.createElement('script'); s.src = 'pptxgen.bundle.js'; s.onload = () => res(window.PptxGenJS); s.onerror = () => { pptxLib = null; rej(new Error('Pustaka PowerPoint gagal dimuat. Periksa internet lalu coba lagi.')); }; document.head.appendChild(s); })); }
+function loadPptx() { return pptxLib || (pptxLib = new Promise((res, rej) => { if (window.PptxGenJS) return res(window.PptxGenJS); const s = document.createElement('script'); s.src = 'pptxgen.bundle.js'; s.onload = () => res(window.PptxGenJS); s.onerror = () => { pptxLib = null; rej(new Error('Pustaka PowerPoint gagal dimuat. Periksa internet lalu coba lagi.')); }; document.head.appendChild(s); })); }
 const IN = px => +(px / 96).toFixed(4), PT = px => Math.max(6, Math.round(px * .75)), HX = c => String(c).replace('#', '').slice(0, 6).toUpperCase();
 const TR_XML = { fade: '<p:fade/>', push: '<p:push dir="u"/>', zoom: '<p:zoom/>', wipe: '<p:wipe dir="r"/>', flip: '<p:cover dir="r"/>' };
 const PRESET = { wipe: [22, 'entr', 8, 'wipe(left)'], fade: [10, 'entr', 0, 'fade'] };

@@ -12,7 +12,28 @@ Aplikasi chat AI pribadi yang memakai API gratis dari berbagai penyedia. Semua c
 | `icon.svg`, `icon-192.png`, `icon-512.png`, `icon-maskable.png`, `apple-touch-icon.png` | Logo Obsidia |
 | `studio.js` | Studio Slide dan Studio Video |
 | `pptxgen.bundle.js` | Pustaka pembuat file PowerPoint (PptxGenJS, lisensi MIT) |
+| `pdf.min.mjs`, `pdf.worker.min.mjs` | Pustaka pembaca PDF (PDF.js dari Mozilla, lisensi Apache 2.0) |
 | `relay/` | Server gratis untuk mode latar belakang (opsional, dipasang di Cloudflare) |
+
+## Melampirkan dokumen, foto, dan video di chat
+
+Ketuk **+** di kotak pesan (atau seret berkas ke sana di komputer). Yang bisa dilampirkan, sampai 5 dokumen dan 5 foto per pesan:
+
+- **PDF**: teks setiap halaman dibaca. PDF hasil pindaian (gambar) dikirim sebagai gambar halaman, maksimal 5 halaman pertama.
+- **Word (.docx)**: judul, paragraf, daftar, tabel, dan catatan kaki.
+- **PowerPoint (.pptx)**: teks setiap slide beserta catatan pembicara.
+- **Excel (.xlsx)**: isi setiap sheet, sampai 3000 baris per sheet.
+- **Foto**: JPG, PNG, WebP, GIF, dan HEIC dari iPhone.
+- **Video**: 5 cuplikan gambar diambil dari video. Suara di video tidak ikut terbaca.
+- **Berkas teks dan kode**: txt, md, csv, json, html, py, dan lainnya.
+
+Format lama (.doc, .ppt, .xls) dan berkas Pages/Keynote/Numbers belum bisa dibaca; ekspor dulu ke .docx, .pptx, .xlsx, atau PDF.
+
+Dokumen diingat sepanjang chat, jadi kamu bisa terus bertanya ("ringkas bab 2", "buat daftar pustakanya") tanpa melampirkan ulang. Seberapa banyak isi dokumen yang dikirim diatur di **Pengaturan > Umum > Batas isi dokumen yang dikirim**. Dokumen panjang paling cocok dengan Gemini; Groq membatasi jumlah token per menit, jadi Obsidia otomatis pindah ke penyedia lain bila Groq menolak.
+
+Untuk foto, video, dan PDF pindaian, Obsidia otomatis memakai model yang bisa melihat gambar (misalnya Gemini, atau Llama 4 Scout di Groq).
+
+Pengetahuan proyek juga menerima PDF, Word, PowerPoint, dan Excel.
 
 ## Studio Slide dan Studio Video
 
